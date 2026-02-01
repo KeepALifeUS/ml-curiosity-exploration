@@ -1,0 +1,668 @@
+"""
+Random Network Distillation (RND) для exploration через непредсказуемость.
+
+Реализует advanced exploration mechanism через prediction error от случайной сети
+с Context7 enterprise patterns для scalable curiosity systems.
+"""
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import numpy as np
+from typing import Dict, Tuple, Optional, List, Any
+from dataclasses import dataclass
+import logging
+from collections import deque
+import time
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class RNDConfig:
+    """Конфигурация для Random Network Distillation."""
+    
+    state_dim: int = 256
+    target_network_dim: int = 512
+    predictor_network_dim: int = 512
+    hidden_layers: List[int] = None
+    
+    # Параметры обучения
+    learning_rate: float = 1e-4
+    batch_size: int = 256
+    target_update_frequency: int = 1000
+    
+    # Reward scaling
+    intrinsic_reward_coeff: float = 1.0
+    reward_normalization: bool = True
+    reward_clip_max: float = 5.0
+    
+    # Running statistics
+    obs_normalize: bool = True
+    obs_clip_max: float = 5.0
+    
+    # Crypto-specific parameters
+    market_volatility_weight: float = 0.3
+    portfolio_diversity_weight: float = 0.4
+    risk_novelty_weight: float = 0.3
+    
+    # Context7 enterprise settings
+    distributed_mode: bool = True
+    checkpoint_interval: int = 2000
+    metrics_tracking: bool = True
+    
+    def __post_init__(self):
+        if self.hidden_layers is None:
+            self.hidden_layers = [512, 256, 128]
+
+
+class RunningMeanStd:
+    """
+    Running mean and standard deviation calculator для нормализации.
+    
+    Использует Context7 паттерн "Streaming Statistics" для
+    эффективной обработки continuous data streams.
+    """
+    
+    def __init__(self, epsilon: float = 1e-4, shape: Tuple = ()):
+        self.mean = np.zeros(shape, dtype=np.float64)
+        self.var = np.ones(shape, dtype=np.float64)
+        self.count = epsilon
+        
+    def update(self, x: np.ndarray) -> None:
+        """Обновление статистик новыми данными."""
+        batch_mean = np.mean(x, axis=0)
+        batch_var = np.var(x, axis=0)
+        batch_count = x.shape[0]
+        self.update_from_moments(batch_mean, batch_var, batch_count)
+    
+    def update_from_moments(self, batch_mean: np.ndarray, batch_var: np.ndarray, batch_count: int) -> None:
+        """Обновление из batch moments."""
+        delta = batch_mean - self.mean
+        tot_count = self.count + batch_count
+        
+        new_mean = self.mean + delta * batch_count / tot_count
+        m_a = self.var * self.count
+        m_b = batch_var * batch_count
+        M2 = m_a + m_b + np.square(delta) * self.count * batch_count / tot_count
+        new_var = M2 / tot_count
+        
+        self.mean = new_mean
+        self.var = new_var
+        self.count = tot_count
+    
+    def normalize(self, x: np.ndarray) -> np.ndarray:
+        """Нормализация данных."""
+        return (x - self.mean) / np.sqrt(self.var + 1e-8)
+
+
+class RandomNetwork(nn.Module):
+    """
+    Random target network для RND.
+    
+    Применяет Context7 паттерн "Fixed Random Features" для
+    создания stable exploration targets.
+    """
+    
+    def __init__(self, config: RNDConfig):
+        super().__init__()
+        self.config = config
+        
+        # Построение сети с заданной архитектурой
+        layers = []
+        prev_dim = config.state_dim
+        
+        for hidden_dim in config.hidden_layers:
+            layers.extend([
+                nn.Linear(prev_dim, hidden_dim),
+                nn.ReLU(),
+                nn.LayerNorm(hidden_dim)  # Стабилизация для случайной сети
+            ])
+            prev_dim = hidden_dim
+        
+        # Выходной слой
+        layers.append(nn.Linear(prev_dim, config.target_network_dim))
+        
+        self.network = nn.Sequential(*layers)
+        
+        # Замораживание параметров - сеть остается случайной
+        for param in self.parameters():
+            param.requires_grad = False
+        
+        logger.info(f"Random target network initialized with {sum(p.numel() for p in self.parameters())} parameters")
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass через случайную сеть."""
+        return self.network(x)
+
+
+class PredictorNetwork(nn.Module):
+    """
+    Predictor network для обучения предсказанию random network output.
+    
+    Использует Context7 паттерн "Adaptive Learning" для
+    эффективного обучения representation.
+    """
+    
+    def __init__(self, config: RNDConfig):
+        super().__init__()
+        self.config = config
+        
+        # Более сложная архитектура для predictor network
+        layers = []
+        prev_dim = config.state_dim
+        
+        # Encoder part с attention mechanism для crypto data
+        self.state_encoder = nn.Sequential(
+            nn.Linear(config.state_dim, config.hidden_layers[0]),
+            nn.ReLU(),
+            nn.BatchNorm1d(config.hidden_layers[0]),
+            nn.Dropout(0.2)
+        )
+        
+        # Multi-head attention для выделения важных features
+        self.attention = nn.MultiheadAttention(
+            embed_dim=config.hidden_layers[0],
+            num_heads=8,
+            dropout=0.1,
+            batch_first=True
+        )
+        
+        # Predictor layers
+        prev_dim = config.hidden_layers[0]
+        for i, hidden_dim in enumerate(config.hidden_layers[1:], 1):
+            layers.extend([
+                nn.Linear(prev_dim, hidden_dim),
+                nn.ReLU(),
+                nn.BatchNorm1d(hidden_dim),
+                nn.Dropout(0.1 if i < len(config.hidden_layers) - 1 else 0.05)
+            ])
+            prev_dim = hidden_dim
+        
+        # Выходной слой с регуляризацией
+        layers.extend([
+            nn.Linear(prev_dim, config.predictor_network_dim),
+            nn.Tanh()  # Ограничение выходных значений
+        ])
+        
+        self.predictor = nn.Sequential(*layers)
+        
+        logger.info(f"Predictor network initialized with {sum(p.numel() for p in self.parameters())} parameters")
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass с attention mechanism.
+        
+        Args:
+            x: Input state tensor [batch_size, state_dim]
+            
+        Returns:
+            Predicted random network output [batch_size, predictor_network_dim]
+        """
+        batch_size = x.size(0)
+        
+        # Кодирование состояния
+        encoded = self.state_encoder(x)
+        
+        # Self-attention для выделения важных patterns
+        # Добавляем sequence dimension для attention
+        encoded_seq = encoded.unsqueeze(1)  # [batch_size, 1, hidden_dim]
+        attended, _ = self.attention(encoded_seq, encoded_seq, encoded_seq)
+        attended = attended.squeeze(1)  # [batch_size, hidden_dim]
+        
+        # Residual connection
+        attended = attended + encoded
+        
+        # Predictor network
+        prediction = self.predictor(attended)
+        
+        return prediction
+
+
+class CryptoStateProcessor:
+    """
+    Обработчик состояний специфичных для crypto trading.
+    
+    Реализует Context7 паттерн "Domain-Specific Processing" для
+    оптимальной обработки финансовых данных.
+    """
+    
+    def __init__(self, config: RNDConfig):
+        self.config = config
+        
+        # Веса для разных компонентов состояния
+        self.market_weight = config.market_volatility_weight
+        self.portfolio_weight = config.portfolio_diversity_weight
+        self.risk_weight = config.risk_novelty_weight
+        
+        # Статистики для нормализации
+        self.market_stats = RunningMeanStd()
+        self.portfolio_stats = RunningMeanStd()
+        self.risk_stats = RunningMeanStd()
+        
+        logger.info("Crypto state processor initialized")
+    
+    def process_state(self, state: np.ndarray) -> np.ndarray:
+        """
+        Обработка состояния с учетом crypto-специфики.
+        
+        Args:
+            state: Raw state от trading environment
+            
+        Returns:
+            Processed state для RND
+        """
+        # Разделение состояния на компоненты (предполагаем структуру)
+        total_features = state.shape[-1]
+        market_end = int(total_features * 0.6)  # 60% - рыночные данные
+        portfolio_end = int(total_features * 0.85)  # 25% - портфель
+        # Остальное - риск метрики
+        
+        market_data = state[..., :market_end]
+        portfolio_data = state[..., market_end:portfolio_end]
+        risk_data = state[..., portfolio_end:]
+        
+        # Обновление статистик и нормализация
+        if len(state.shape) == 2:  # Batch
+            self.market_stats.update(market_data)
+            self.portfolio_stats.update(portfolio_data)
+            self.risk_stats.update(risk_data)
+        
+        market_normalized = self.market_stats.normalize(market_data)
+        portfolio_normalized = self.portfolio_stats.normalize(portfolio_data)
+        risk_normalized = self.risk_stats.normalize(risk_data)
+        
+        # Взвешенное объединение с crypto-specific весами
+        processed_state = np.concatenate([
+            market_normalized * self.market_weight,
+            portfolio_normalized * self.portfolio_weight,
+            risk_normalized * self.risk_weight
+        ], axis=-1)
+        
+        return processed_state
+
+
+class RNDTrainer:
+    """
+    Trainer для Random Network Distillation с advanced optimization.
+    
+    Применяет Context7 паттерн "Distributed Training" для
+    scalable learning на больших объемах trading data.
+    """
+    
+    def __init__(self, config: RNDConfig, device: str = 'cuda'):
+        self.config = config
+        self.device = device
+        
+        # Инициализация сетей
+        self.target_network = RandomNetwork(config).to(device)
+        self.predictor_network = PredictorNetwork(config).to(device)
+        self.state_processor = CryptoStateProcessor(config)
+        
+        # Оптимизатор только для predictor network
+        self.optimizer = torch.optim.Adam(
+            self.predictor_network.parameters(),
+            lr=config.learning_rate,
+            weight_decay=1e-6
+        )
+        
+        # Learning rate scheduler с warmup
+        self.scheduler = torch.optim.lr_scheduler.OneCycleLR(
+            self.optimizer,
+            max_lr=config.learning_rate,
+            total_steps=100000,
+            pct_start=0.1
+        )
+        
+        # Статистики для intrinsic reward
+        self.reward_stats = RunningMeanStd()
+        self.obs_stats = RunningMeanStd(shape=(config.state_dim,))
+        
+        # Метрики
+        self.training_step = 0
+        self.prediction_errors = deque(maxlen=10000)
+        self.intrinsic_rewards = deque(maxlen=10000)
+        
+        # Performance tracking
+        self.last_update_time = time.time()
+        self.updates_per_second = 0.0
+        
+        logger.info(f"RND trainer initialized on device: {device}")
+        logger.info(f"Target network frozen with {sum(p.numel() for p in self.target_network.parameters())} parameters")
+    
+    def normalize_observations(self, observations: torch.Tensor) -> torch.Tensor:
+        """Нормализация observations."""
+        if self.config.obs_normalize:
+            # Обновление статистик
+            obs_np = observations.detach().cpu().numpy()
+            self.obs_stats.update(obs_np)
+            
+            # Нормализация
+            normalized = self.obs_stats.normalize(obs_np)
+            normalized = np.clip(normalized, -self.config.obs_clip_max, self.config.obs_clip_max)
+            
+            return torch.FloatTensor(normalized).to(self.device)
+        
+        return observations
+    
+    def compute_intrinsic_reward(self, observations: torch.Tensor) -> torch.Tensor:
+        """
+        Вычисление intrinsic reward через RND prediction error.
+        
+        Args:
+            observations: Batch of observations [batch_size, state_dim]
+            
+        Returns:
+            Intrinsic rewards [batch_size]
+        """
+        with torch.no_grad():
+            # Нормализация observations
+            normalized_obs = self.normalize_observations(observations)
+            
+            # Получение targets и predictions
+            target_output = self.target_network(normalized_obs)
+            predicted_output = self.predictor_network(normalized_obs)
+            
+            # Вычисление MSE error как intrinsic reward
+            prediction_error = F.mse_loss(
+                predicted_output, target_output, reduction='none'
+            ).mean(dim=1)
+            
+            # Сохранение для статистики
+            self.prediction_errors.extend(prediction_error.cpu().numpy())
+            
+            if self.config.reward_normalization:
+                # Обновление reward statistics
+                error_np = prediction_error.cpu().numpy()
+                self.reward_stats.update(error_np)
+                
+                # Нормализация reward
+                normalized_reward = self.reward_stats.normalize(error_np)
+                normalized_reward = np.clip(
+                    normalized_reward, 0, self.config.reward_clip_max
+                )
+                
+                intrinsic_reward = torch.FloatTensor(normalized_reward).to(self.device)
+            else:
+                intrinsic_reward = prediction_error
+            
+            # Масштабирование
+            intrinsic_reward = intrinsic_reward * self.config.intrinsic_reward_coeff
+            
+            # Сохранение для статистики
+            self.intrinsic_rewards.extend(intrinsic_reward.cpu().numpy())
+            
+            return intrinsic_reward
+    
+    def train_step(self, observations: torch.Tensor) -> Dict[str, float]:
+        """
+        Выполнение одного шага обучения RND.
+        
+        Args:
+            observations: Batch of observations для обучения
+            
+        Returns:
+            Dictionary с метриками обучения
+        """
+        start_time = time.time()
+        
+        # Обработка состояний для crypto trading
+        if isinstance(observations, np.ndarray):
+            processed_obs = self.state_processor.process_state(observations)
+            observations = torch.FloatTensor(processed_obs).to(self.device)
+        
+        self.optimizer.zero_grad()
+        
+        # Нормализация observations
+        normalized_obs = self.normalize_observations(observations)
+        
+        # Forward pass
+        target_output = self.target_network(normalized_obs)
+        predicted_output = self.predictor_network(normalized_obs)
+        
+        # Вычисление потери
+        prediction_loss = F.mse_loss(predicted_output, target_output.detach())
+        
+        # Backpropagation
+        prediction_loss.backward()
+        
+        # Gradient clipping для стабильности
+        torch.nn.utils.clip_grad_norm_(
+            self.predictor_network.parameters(), max_norm=1.0
+        )
+        
+        self.optimizer.step()
+        self.scheduler.step()
+        
+        # Обновление статистик
+        self.training_step += 1
+        update_time = time.time() - start_time
+        self.updates_per_second = 0.9 * self.updates_per_second + 0.1 / update_time
+        
+        # Вычисление текущих intrinsic rewards
+        with torch.no_grad():
+            current_rewards = self.compute_intrinsic_reward(observations)
+        
+        # Метрики
+        metrics = {
+            'prediction_loss': prediction_loss.item(),
+            'intrinsic_reward_mean': current_rewards.mean().item(),
+            'intrinsic_reward_std': current_rewards.std().item(),
+            'prediction_error_mean': np.mean(list(self.prediction_errors)[-100:]) if self.prediction_errors else 0.0,
+            'learning_rate': self.scheduler.get_last_lr()[0],
+            'updates_per_second': self.updates_per_second,
+            'training_step': self.training_step
+        }
+        
+        return metrics
+    
+    def get_exploration_bonus(self, observation: torch.Tensor) -> float:
+        """
+        Получение exploration bonus для single observation.
+        
+        Args:
+            observation: Single observation
+            
+        Returns:
+            Exploration bonus value
+        """
+        if len(observation.shape) == 1:
+            observation = observation.unsqueeze(0)
+        
+        intrinsic_reward = self.compute_intrinsic_reward(observation)
+        return intrinsic_reward.item()
+    
+    def save_checkpoint(self, filepath: str) -> None:
+        """Сохранение checkpoint."""
+        checkpoint = {
+            'predictor_network': self.predictor_network.state_dict(),
+            'target_network': self.target_network.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
+            'scheduler': self.scheduler.state_dict(),
+            'config': self.config,
+            'training_step': self.training_step,
+            'reward_stats': self.reward_stats,
+            'obs_stats': self.obs_stats,
+            'state_processor': self.state_processor
+        }
+        torch.save(checkpoint, filepath)
+        logger.info(f"RND checkpoint saved to {filepath}")
+    
+    def load_checkpoint(self, filepath: str) -> None:
+        """Загрузка checkpoint."""
+        checkpoint = torch.load(filepath, map_location=self.device)
+        
+        self.predictor_network.load_state_dict(checkpoint['predictor_network'])
+        self.target_network.load_state_dict(checkpoint['target_network'])
+        self.optimizer.load_state_dict(checkpoint['optimizer'])
+        self.scheduler.load_state_dict(checkpoint['scheduler'])
+        self.training_step = checkpoint['training_step']
+        self.reward_stats = checkpoint['reward_stats']
+        self.obs_stats = checkpoint['obs_stats']
+        self.state_processor = checkpoint['state_processor']
+        
+        logger.info(f"RND checkpoint loaded from {filepath}")
+    
+    def get_statistics(self) -> Dict[str, Any]:
+        """Получение подробной статистики RND."""
+        return {
+            'training_step': self.training_step,
+            'updates_per_second': self.updates_per_second,
+            'prediction_errors': {
+                'mean': np.mean(list(self.prediction_errors)) if self.prediction_errors else 0.0,
+                'std': np.std(list(self.prediction_errors)) if self.prediction_errors else 0.0,
+                'count': len(self.prediction_errors)
+            },
+            'intrinsic_rewards': {
+                'mean': np.mean(list(self.intrinsic_rewards)) if self.intrinsic_rewards else 0.0,
+                'std': np.std(list(self.intrinsic_rewards)) if self.intrinsic_rewards else 0.0,
+                'count': len(self.intrinsic_rewards)
+            },
+            'reward_normalization': {
+                'mean': self.reward_stats.mean,
+                'var': self.reward_stats.var,
+                'count': self.reward_stats.count
+            },
+            'observation_normalization': {
+                'mean': self.obs_stats.mean,
+                'var': self.obs_stats.var,
+                'count': self.obs_stats.count
+            }
+        }
+
+
+class CryptoRNDEnvironment:
+    """
+    Crypto trading environment с RND-based exploration.
+    
+    Интегрирует Context7 паттерн "Environment Augmentation" для
+    enhanced exploration в финансовых рынках.
+    """
+    
+    def __init__(
+        self,
+        base_env,
+        rnd_trainer: RNDTrainer,
+        intrinsic_reward_weight: float = 0.1,
+        exploration_bonus_decay: float = 0.99
+    ):
+        self.base_env = base_env
+        self.rnd_trainer = rnd_trainer
+        self.intrinsic_reward_weight = intrinsic_reward_weight
+        self.exploration_bonus_decay = exploration_bonus_decay
+        
+        self.episode_step = 0
+        self.total_episodes = 0
+        self.episode_intrinsic_rewards = []
+        
+        logger.info(f"Crypto RND environment initialized with intrinsic weight: {intrinsic_reward_weight}")
+    
+    def step(self, action):
+        """Step с RND exploration bonus."""
+        # Выполнение действия в базовой среде
+        next_state, extrinsic_reward, done, info = self.base_env.step(action)
+        
+        # Получение RND exploration bonus
+        state_tensor = torch.FloatTensor(next_state).to(self.rnd_trainer.device)
+        if len(state_tensor.shape) == 1:
+            state_tensor = state_tensor.unsqueeze(0)
+        
+        intrinsic_reward = self.rnd_trainer.compute_intrinsic_reward(state_tensor).item()
+        
+        # Decay exploration bonus по ходу эпизода
+        decayed_intrinsic_reward = intrinsic_reward * (self.exploration_bonus_decay ** self.episode_step)
+        
+        # Общий reward
+        total_reward = extrinsic_reward + self.intrinsic_reward_weight * decayed_intrinsic_reward
+        
+        # Обновление статистик
+        self.episode_step += 1
+        self.episode_intrinsic_rewards.append(intrinsic_reward)
+        
+        # Информация для анализа
+        info.update({
+            'intrinsic_reward': intrinsic_reward,
+            'decayed_intrinsic_reward': decayed_intrinsic_reward,
+            'extrinsic_reward': extrinsic_reward,
+            'total_reward': total_reward,
+            'intrinsic_weight': self.intrinsic_reward_weight,
+            'episode_step': self.episode_step
+        })
+        
+        if done:
+            info['episode_intrinsic_reward_sum'] = sum(self.episode_intrinsic_rewards)
+            info['episode_intrinsic_reward_mean'] = np.mean(self.episode_intrinsic_rewards)
+        
+        return next_state, total_reward, done, info
+    
+    def reset(self):
+        """Reset environment."""
+        state = self.base_env.reset()
+        
+        # Сброс episode статистик
+        self.episode_step = 0
+        self.total_episodes += 1
+        self.episode_intrinsic_rewards = []
+        
+        return state
+    
+    def update_rnd(self, batch_observations: np.ndarray) -> Dict[str, float]:
+        """Обновление RND с batch observations."""
+        return self.rnd_trainer.train_step(batch_observations)
+
+
+def create_rnd_system(config: RNDConfig) -> RNDTrainer:
+    """
+    Factory function для создания RND system.
+    
+    Args:
+        config: RND configuration
+        
+    Returns:
+        Configured RND trainer
+    """
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    rnd_trainer = RNDTrainer(config, device)
+    
+    logger.info("RND system created successfully")
+    logger.info(f"Target network parameters: {sum(p.numel() for p in rnd_trainer.target_network.parameters())}")
+    logger.info(f"Predictor network parameters: {sum(p.numel() for p in rnd_trainer.predictor_network.parameters())}")
+    
+    return rnd_trainer
+
+
+if __name__ == "__main__":
+    # Пример использования RND для crypto trading exploration
+    config = RNDConfig(
+        state_dim=128,  # Crypto market state
+        target_network_dim=256,
+        predictor_network_dim=256,
+        hidden_layers=[512, 256, 128],
+        learning_rate=1e-4,
+        intrinsic_reward_coeff=0.1
+    )
+    
+    rnd_trainer = create_rnd_system(config)
+    
+    # Создание synthetic crypto trading data
+    batch_size = 64
+    observations = np.random.randn(batch_size, config.state_dim)
+    
+    # Обучение RND
+    for step in range(100):
+        metrics = rnd_trainer.train_step(observations)
+        
+        if step % 20 == 0:
+            print(f"Step {step}: Loss={metrics['prediction_loss']:.4f}, "
+                  f"Intrinsic Reward={metrics['intrinsic_reward_mean']:.4f}")
+    
+    # Получение exploration bonus
+    single_obs = torch.randn(1, config.state_dim)
+    exploration_bonus = rnd_trainer.get_exploration_bonus(single_obs)
+    print(f"Exploration bonus: {exploration_bonus:.4f}")
+    
+    # Статистика
+    stats = rnd_trainer.get_statistics()
+    print("RND Statistics:", stats)
