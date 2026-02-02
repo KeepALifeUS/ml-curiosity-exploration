@@ -1,8 +1,8 @@
 """
-Exploration Bonus System для координации различных exploration strategies.
+Exploration Bonus System for координации various exploration strategies.
 
-Реализует unified framework для комбинирования multiple exploration signals
-с enterprise patterns для intelligent bonus allocation.
+Implements unified framework for комбинирования multiple exploration signals
+with enterprise patterns for intelligent bonus allocation.
 """
 
 import torch
@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 import time
 from enum import Enum
 
-# Настройка логирования
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class ExplorationStrategy(Enum):
 
 @dataclass
 class ExplorationBonusConfig:
-    """Конфигурация для exploration bonus system."""
+    """Configuration for exploration bonus system."""
     
     # Strategy weights
     strategy_weights: Dict[str, float] = field(default_factory=lambda: {
@@ -87,9 +87,9 @@ class ExplorationBonusConfig:
 
 class ExplorationBonusCalculator(ABC):
     """
-    Абстрактный базовый класс для exploration bonus calculation.
+    Абстрактный base класс for exploration bonus calculation.
     
-    Применяет design pattern "Strategy Pattern" для
+    Applies design pattern "Strategy Pattern" for
     flexible bonus computation methods.
     """
     
@@ -100,7 +100,7 @@ class ExplorationBonusCalculator(ABC):
         action: Optional[np.ndarray] = None,
         context: Optional[Dict[str, Any]] = None
     ) -> float:
-        """Вычисление exploration bonus."""
+        """Computation exploration bonus."""
         pass
     
     @abstractmethod
@@ -112,12 +112,12 @@ class ExplorationBonusCalculator(ABC):
         next_state: Optional[np.ndarray] = None,
         context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, float]:
-        """Обновление internal state calculator."""
+        """Update internal state calculator."""
         pass
     
     @abstractmethod
     def get_statistics(self) -> Dict[str, Any]:
-        """Получение статистики calculator."""
+        """Get statistics calculator."""
         pass
 
 
@@ -137,7 +137,7 @@ class CountBasedBonusCalculator(ExplorationBonusCalculator):
         context: Optional[Dict[str, Any]] = None
     ) -> float:
         """Compute count-based bonus."""
-        # Простая дискретизация для демонстрации
+        # Simple дискретизация for демонстрации
         state_hash = hash(state.tobytes())
         count = self.state_counts[state_hash]
         
@@ -198,10 +198,10 @@ class PredictionErrorBonusCalculator(ExplorationBonusCalculator):
         context: Optional[Dict[str, Any]] = None
     ) -> float:
         """Compute prediction error-based bonus."""
-        # Получение prediction error из context
+        # Get prediction error from context
         prediction_error = context.get('prediction_error', 0.0) if context else 0.0
         
-        # Нормализация по running statistics
+        # Normalization by running statistics
         if len(self.prediction_errors) > 10:
             normalized_error = (prediction_error - self.error_mean) / (self.error_std + 1e-8)
             bonus = 0.2 * np.clip(normalized_error, 0, 5)
@@ -252,29 +252,29 @@ class PredictionErrorBonusCalculator(ExplorationBonusCalculator):
 
 class ExplorationBonusManager:
     """
-    Manager для координации multiple exploration bonus calculators.
+    Manager for координации multiple exploration bonus calculators.
     
-    Использует design pattern "Composite Strategy" для
+    Uses design pattern "Composite Strategy" for
     intelligent combination exploration signals.
     """
     
     def __init__(self, config: ExplorationBonusConfig):
         self.config = config
         
-        # Инициализация calculators для каждой strategy
+        # Initialize calculators for each strategy
         self.calculators = {
             ExplorationStrategy.COUNT_BASED.value: CountBasedBonusCalculator(config),
             ExplorationStrategy.PREDICTION_BASED.value: PredictionErrorBonusCalculator(config)
         }
         
-        # Strategy weights (может адаптироваться)
+        # Strategy weights (can адаптироваться)
         self.current_weights = config.strategy_weights.copy()
         
-        # Performance tracking для adaptive weighting
+        # Performance tracking for adaptive weighting
         self.strategy_performance = defaultdict(lambda: deque(maxlen=config.performance_window))
         self.strategy_effectiveness = defaultdict(float)
         
-        # Bonus history для normalization
+        # Bonus history for normalization
         self.bonus_history = deque(maxlen=config.normalization_window)
         self.component_bonus_history = defaultdict(lambda: deque(maxlen=config.normalization_window))
         
@@ -304,7 +304,7 @@ class ExplorationBonusManager:
         context: Optional[Dict[str, Any]] = None
     ) -> Tuple[float, Dict[str, float]]:
         """
-        Вычисление combined exploration bonus.
+        Computation combined exploration bonus.
         
         Args:
             state: Current state
@@ -314,7 +314,7 @@ class ExplorationBonusManager:
         Returns:
             Tuple (total_bonus, component_breakdown)
         """
-        # Проверка cache
+        # Check cache
         cache_key = None
         if self.bonus_cache is not None:
             state_hash = hash(state.tobytes())
@@ -326,14 +326,14 @@ class ExplorationBonusManager:
                 self.cache_hit_count += 1
                 return self.bonus_cache[cache_key]
         
-        # Получение context information
+        # Get context information
         if context is None:
             context = {}
         
-        # Обновление market regime и risk level
+        # Update market regime and risk level
         self._update_market_context(context)
         
-        # Вычисление bonus от каждой strategy
+        # Computation bonus from each strategy
         component_bonuses = {}
         total_weighted_bonus = 0.0
         
@@ -346,7 +346,7 @@ class ExplorationBonusManager:
                 weight = self.current_weights.get(strategy, 0.0)
                 total_weighted_bonus += weight * bonus
                 
-                # Сохранение для history
+                # Save for history
                 self.component_bonus_history[strategy].append(bonus)
                 
             except Exception as e:
@@ -370,14 +370,14 @@ class ExplorationBonusManager:
         # Normalization
         normalized_bonus = self._normalize_bonus(adjusted_bonus)
         
-        # Клиппинг в заданный range
+        # Клиппинг in заданный range
         final_bonus = np.clip(
             normalized_bonus,
             self.config.min_total_bonus,
             self.config.max_total_bonus
         )
         
-        # Сохранение для history
+        # Save for history
         self.bonus_history.append(final_bonus)
         
         # Component breakdown
@@ -393,7 +393,7 @@ class ExplorationBonusManager:
             'current_weights': self.current_weights.copy()
         }
         
-        # Сохранение в cache
+        # Save in cache
         if cache_key is not None:
             self.bonus_cache[cache_key] = (final_bonus, breakdown)
             
@@ -414,7 +414,7 @@ class ExplorationBonusManager:
         context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Обновление exploration bonus calculators.
+        Update exploration bonus calculators.
         
         Args:
             state: Current state
@@ -431,13 +431,13 @@ class ExplorationBonusManager:
         
         update_stats = {}
         
-        # Обновление каждого calculator
+        # Update each calculator
         for strategy, calculator in self.calculators.items():
             try:
                 stats = calculator.update(state, action, reward, next_state, context)
                 update_stats[f'{strategy}_update'] = stats
                 
-                # Tracking performance для adaptive weights
+                # Tracking performance for adaptive weights
                 if reward is not None:
                     self.strategy_performance[strategy].append(reward)
                 
@@ -473,7 +473,7 @@ class ExplorationBonusManager:
         return update_stats
     
     def _update_market_context(self, context: Dict[str, Any]) -> None:
-        """Обновление market regime и risk context."""
+        """Update market regime and risk context."""
         # Market regime detection
         if 'market_regime' in context:
             self.current_market_regime = context['market_regime']
@@ -490,7 +490,7 @@ class ExplorationBonusManager:
             self.risk_history.append(self.current_risk_level)
     
     def _compute_risk_multiplier(self) -> float:
-        """Вычисление risk-adjusted multiplier."""
+        """Computation risk-adjusted multiplier."""
         if not self.config.risk_adjusted_exploration:
             return 1.0
         
@@ -501,7 +501,7 @@ class ExplorationBonusManager:
         return risk_multiplier
     
     def _compute_temporal_multiplier(self) -> float:
-        """Вычисление temporal decay multiplier."""
+        """Computation temporal decay multiplier."""
         if self.config.exploration_schedule == "constant":
             return 1.0
         elif self.config.exploration_schedule == "decay":
@@ -513,7 +513,7 @@ class ExplorationBonusManager:
             return 1.0
     
     def _normalize_bonus(self, bonus: float) -> float:
-        """Нормализация bonus value."""
+        """Normalization bonus value."""
         if self.config.bonus_normalization_method == "fixed":
             return bonus
         elif self.config.bonus_normalization_method == "adaptive":
@@ -533,7 +533,7 @@ class ExplorationBonusManager:
             return bonus
     
     def _update_normalization_stats(self) -> None:
-        """Обновление normalization statistics."""
+        """Update normalization statistics."""
         if len(self.bonus_history) > 10:
             bonuses = list(self.bonus_history)
             self.bonus_stats = {
@@ -542,11 +542,11 @@ class ExplorationBonusManager:
             }
     
     def _update_adaptive_weights(self) -> None:
-        """Обновление adaptive strategy weights."""
+        """Update adaptive strategy weights."""
         if not self.config.adaptive_weights:
             return
         
-        # Вычисление effectiveness каждой strategy
+        # Computation effectiveness each strategy
         total_effectiveness = 0.0
         strategy_scores = {}
         
@@ -566,7 +566,7 @@ class ExplorationBonusManager:
                 strategy_scores[strategy] = 1.0
                 total_effectiveness += 1.0
         
-        # Обновление weights на основе effectiveness
+        # Update weights on основе effectiveness
         if total_effectiveness > 0:
             for strategy in self.current_weights.keys():
                 if strategy in strategy_scores:
@@ -578,7 +578,7 @@ class ExplorationBonusManager:
                         alpha * new_weight
                     )
         
-        # Нормализация weights
+        # Normalization weights
         total_weight = sum(self.current_weights.values())
         if total_weight > 0:
             for strategy in self.current_weights:
@@ -587,7 +587,7 @@ class ExplorationBonusManager:
         logger.info(f"Updated adaptive weights: {self.current_weights}")
     
     def get_exploration_statistics(self) -> Dict[str, Any]:
-        """Получение подробной статистики exploration."""
+        """Get подробной statistics exploration."""
         stats = {
             'total_updates': self.update_counter,
             'current_weights': self.current_weights.copy(),
@@ -648,7 +648,7 @@ class ExplorationBonusManager:
         return stats
     
     def set_strategy_weight(self, strategy: str, weight: float) -> None:
-        """Установка веса для конкретной strategy."""
+        """Установка weights for specific strategy."""
         if strategy in self.current_weights:
             self.current_weights[strategy] = weight
             
@@ -668,7 +668,7 @@ class ExplorationBonusManager:
         calculator: ExplorationBonusCalculator,
         weight: float = 0.1
     ) -> None:
-        """Добавление новой strategy calculator."""
+        """Add new strategy calculator."""
         self.calculators[strategy] = calculator
         self.current_weights[strategy] = weight
         
@@ -681,7 +681,7 @@ class ExplorationBonusManager:
         logger.info(f"Added strategy calculator: {strategy} with weight {weight}")
     
     def save_checkpoint(self, filepath: str) -> None:
-        """Сохранение checkpoint exploration bonus manager."""
+        """Save checkpoint exploration bonus manager."""
         checkpoint_data = {
             'config': self.config,
             'current_weights': self.current_weights,
@@ -700,7 +700,7 @@ class ExplorationBonusManager:
         logger.info(f"Exploration bonus manager checkpoint saved to {filepath}")
     
     def load_checkpoint(self, filepath: str) -> None:
-        """Загрузка checkpoint exploration bonus manager."""
+        """Load checkpoint exploration bonus manager."""
         import pickle
         with open(filepath, 'rb') as f:
             checkpoint_data = pickle.load(f)
@@ -718,10 +718,10 @@ class ExplorationBonusManager:
 
 class ExplorationBonusEnvironment:
     """
-    Environment wrapper с unified exploration bonus system.
+    Environment wrapper with unified exploration bonus system.
     
-    Интегрирует design pattern "Environment Enhancement" для
-    comprehensive exploration в crypto trading.
+    Интегрирует design pattern "Environment Enhancement" for
+    comprehensive exploration in crypto trading.
     """
     
     def __init__(
@@ -734,7 +734,7 @@ class ExplorationBonusEnvironment:
         self.config = config
         self.exploration_weight = exploration_weight
         
-        # Инициализация exploration bonus manager
+        # Initialize exploration bonus manager
         self.bonus_manager = ExplorationBonusManager(config)
         
         # Episode tracking
@@ -749,11 +749,11 @@ class ExplorationBonusEnvironment:
         logger.info(f"Exploration bonus environment initialized with weight: {exploration_weight}")
     
     def step(self, action):
-        """Step с unified exploration bonus."""
-        # Выполнение action в базовой среде
+        """Step with unified exploration bonus."""
+        # Execute action in base среде
         next_state, extrinsic_reward, done, info = self.base_env.step(action)
         
-        # Подготовка context для exploration bonus
+        # Подготовка context for exploration bonus
         context = {
             'market_regime': info.get('market_regime', 'sideways'),
             'risk_level': info.get('risk_level', 0.5),
@@ -762,17 +762,17 @@ class ExplorationBonusEnvironment:
             'episode_step': info.get('episode_step', 0)
         }
         
-        # Получение current state из info или используем next_state
+        # Get current state from info or use next_state
         current_state = info.get('current_state', next_state)
         
-        # Вычисление exploration bonus
+        # Computation exploration bonus
         exploration_bonus, bonus_breakdown = self.bonus_manager.compute_exploration_bonus(
             state=current_state,
             action=action,
             context=context
         )
         
-        # Обновление exploration bonus manager
+        # Update exploration bonus manager
         update_stats = self.bonus_manager.update_exploration_bonus(
             state=current_state,
             action=action,
@@ -790,7 +790,7 @@ class ExplorationBonusEnvironment:
         self.total_exploration_bonus += exploration_bonus
         self.total_extrinsic_reward += extrinsic_reward
         
-        # Обновление info
+        # Update info
         info.update({
             'exploration_bonus': exploration_bonus,
             'exploration_weight': self.exploration_weight,
@@ -827,7 +827,7 @@ class ExplorationBonusEnvironment:
         return state
     
     def get_exploration_report(self) -> Dict[str, Any]:
-        """Получение подробного отчета об exploration."""
+        """Get подробного отчета about exploration."""
         bonus_stats = self.bonus_manager.get_exploration_statistics()
         
         report = {
@@ -844,7 +844,7 @@ class ExplorationBonusEnvironment:
 
 def create_exploration_bonus_system(config: ExplorationBonusConfig) -> ExplorationBonusManager:
     """
-    Factory function для создания exploration bonus system.
+    Factory function for creation exploration bonus system.
     
     Args:
         config: Exploration bonus configuration
@@ -862,7 +862,7 @@ def create_exploration_bonus_system(config: ExplorationBonusConfig) -> Explorati
 
 
 if __name__ == "__main__":
-    # Пример использования exploration bonus system
+    # Пример use exploration bonus system
     config = ExplorationBonusConfig(
         strategy_weights={
             ExplorationStrategy.COUNT_BASED.value: 0.3,
@@ -877,7 +877,7 @@ if __name__ == "__main__":
     # Симуляция exploration
     for episode in range(3):
         for step in range(50):
-            # Случайные данные
+            # Случайные data
             state = np.random.randn(128)
             action = np.random.randn(5)
             reward = np.random.randn() * 0.1
@@ -889,10 +889,10 @@ if __name__ == "__main__":
                 'prediction_error': np.random.exponential(0.5)
             }
             
-            # Получение exploration bonus
+            # Get exploration bonus
             bonus, breakdown = manager.compute_exploration_bonus(state, action, context)
             
-            # Обновление manager
+            # Update manager
             update_stats = manager.update_exploration_bonus(
                 state, action, reward, next_state, context
             )

@@ -1,8 +1,8 @@
 """
-Novelty Detection System для crypto trading environments.
+Novelty Detection System for crypto trading environments.
 
-Реализует advanced методы для обнаружения novel states и patterns
-с enterprise patterns для real-time anomaly detection.
+Implements advanced methods for обнаружения novel states and patterns
+with enterprise patterns for real-time anomaly detection.
 """
 
 import torch
@@ -19,14 +19,14 @@ from sklearn.neighbors import LocalOutlierFactor
 import time
 from abc import ABC, abstractmethod
 
-# Настройка логирования
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class NoveltyDetectionConfig:
-    """Конфигурация для novelty detection system."""
+    """Configuration for novelty detection system."""
     
     # Detection methods
     detection_methods: List[str] = field(default_factory=lambda: [
@@ -74,21 +74,21 @@ class NoveltyDetectionConfig:
 
 class NoveltyDetector(ABC):
     """
-    Абстрактный базовый класс для novelty detection methods.
+    Абстрактный base класс for novelty detection methods.
     
-    Применяет design pattern "Strategy Pattern" для
+    Applies design pattern "Strategy Pattern" for
     flexible novelty detection approaches.
     """
     
     @abstractmethod
     def fit(self, data: np.ndarray) -> None:
-        """Обучение detector на normal data."""
+        """Training detector on normal data."""
         pass
     
     @abstractmethod
     def predict_novelty(self, data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Предсказание novelty scores.
+        Prediction novelty scores.
         
         Returns:
             Tuple (novelty_scores, is_novel_binary)
@@ -102,7 +102,7 @@ class NoveltyDetector(ABC):
     
     @abstractmethod
     def get_statistics(self) -> Dict[str, Any]:
-        """Получение detector statistics."""
+        """Get detector statistics."""
         pass
 
 
@@ -110,8 +110,8 @@ class AutoencoderNoveltyDetector(NoveltyDetector):
     """
     Autoencoder-based novelty detection.
     
-    Использует design pattern "Representation Learning" для
-    detection через reconstruction error.
+    Uses design pattern "Representation Learning" for
+    detection through reconstruction error.
     """
     
     def __init__(self, config: NoveltyDetectionConfig, input_dim: int, device: str = 'cuda'):
@@ -135,7 +135,7 @@ class AutoencoderNoveltyDetector(NoveltyDetector):
         logger.info(f"Autoencoder novelty detector initialized: {input_dim}D input")
     
     def _build_autoencoder(self) -> nn.Module:
-        """Построение autoencoder architecture."""
+        """Build autoencoder architecture."""
         encoder_layers = []
         decoder_layers = []
         
@@ -178,7 +178,7 @@ class AutoencoderNoveltyDetector(NoveltyDetector):
         return autoencoder.to(self.device)
     
     def fit(self, data: np.ndarray) -> None:
-        """Обучение autoencoder на normal data."""
+        """Training autoencoder on normal data."""
         if len(data.shape) == 1:
             data = data.reshape(1, -1)
         
@@ -215,7 +215,7 @@ class AutoencoderNoveltyDetector(NoveltyDetector):
             if epoch % 20 == 0:
                 logger.info(f"Autoencoder training epoch {epoch}: loss = {avg_loss:.6f}")
         
-        # Вычисление threshold на training data
+        # Computation threshold on training data
         self.autoencoder.eval()
         with torch.no_grad():
             reconstructed = self.autoencoder(data_tensor)
@@ -232,7 +232,7 @@ class AutoencoderNoveltyDetector(NoveltyDetector):
         logger.info(f"Autoencoder fitted. Threshold: {self.novelty_threshold:.6f}")
     
     def predict_novelty(self, data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """Prediction novelty через reconstruction error."""
+        """Prediction novelty through reconstruction error."""
         if not self.is_fitted:
             logger.warning("Autoencoder not fitted. Using default threshold.")
             return np.zeros(len(data)), np.zeros(len(data), dtype=bool)
@@ -249,11 +249,11 @@ class AutoencoderNoveltyDetector(NoveltyDetector):
                 reconstructed, data_tensor, reduction='none'
             ).mean(dim=1).cpu().numpy()
         
-        # Normalization по threshold
+        # Normalization by threshold
         novelty_scores = reconstruction_errors / (self.novelty_threshold + 1e-8)
         is_novel = reconstruction_errors > self.novelty_threshold
         
-        # Обновление reconstruction errors history
+        # Update reconstruction errors history
         self.reconstruction_errors.extend(reconstruction_errors)
         
         return novelty_scores, is_novel
@@ -268,7 +268,7 @@ class AutoencoderNoveltyDetector(NoveltyDetector):
         
         data_tensor = torch.FloatTensor(data).to(self.device)
         
-        # Update только на normal data (если известно)
+        # Update only on normal data (if известно)
         if is_novel is not None:
             normal_mask = ~is_novel
             if np.any(normal_mask):
@@ -291,7 +291,7 @@ class AutoencoderNoveltyDetector(NoveltyDetector):
             self.novelty_threshold = np.percentile(recent_errors, self.threshold_percentile)
     
     def get_statistics(self) -> Dict[str, Any]:
-        """Получение autoencoder statistics."""
+        """Get autoencoder statistics."""
         stats = {
             'is_fitted': self.is_fitted,
             'novelty_threshold': self.novelty_threshold,
@@ -320,7 +320,7 @@ class IsolationForestDetector(NoveltyDetector):
     """
     Isolation Forest-based novelty detection.
     
-    Применяет design pattern "Ensemble Learning" для
+    Applies design pattern "Ensemble Learning" for
     robust anomaly detection.
     """
     
@@ -338,21 +338,21 @@ class IsolationForestDetector(NoveltyDetector):
         logger.info("Isolation Forest novelty detector initialized")
     
     def fit(self, data: np.ndarray) -> None:
-        """Обучение Isolation Forest."""
+        """Training Isolation Forest."""
         if len(data.shape) == 1:
             data = data.reshape(1, -1)
         
         self.detector.fit(data)
         self.is_fitted = True
         
-        # Получение decision scores для threshold calibration
+        # Get decision scores for threshold calibration
         scores = self.detector.decision_function(data)
         self.decision_scores.extend(scores)
         
         logger.info(f"Isolation Forest fitted on {len(data)} samples")
     
     def predict_novelty(self, data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """Prediction novelty через isolation scores."""
+        """Prediction novelty through isolation scores."""
         if not self.is_fitted:
             logger.warning("Isolation Forest not fitted.")
             return np.zeros(len(data)), np.zeros(len(data), dtype=bool)
@@ -360,7 +360,7 @@ class IsolationForestDetector(NoveltyDetector):
         if len(data.shape) == 1:
             data = data.reshape(1, -1)
         
-        # Decision function scores (чем меньше, тем более anomalous)
+        # Decision function scores (чем меньше, тем more anomalous)
         decision_scores = self.detector.decision_function(data)
         
         # Binary predictions
@@ -370,18 +370,18 @@ class IsolationForestDetector(NoveltyDetector):
         # Normalize scores (invert so higher = more novel)
         novelty_scores = -decision_scores
         
-        # Сохранение scores
+        # Save scores
         self.decision_scores.extend(decision_scores)
         
         return novelty_scores, is_novel
     
     def update(self, data: np.ndarray, is_novel: Optional[np.ndarray] = None) -> None:
-        """Isolation Forest не поддерживает online updates."""
-        # Можем переобучить на новых данных если накопилось достаточно
+        """Isolation Forest not поддерживает online updates."""
+        # Можем переобучить on new data if накопилось enough
         pass
     
     def get_statistics(self) -> Dict[str, Any]:
-        """Получение Isolation Forest statistics."""
+        """Get Isolation Forest statistics."""
         stats = {
             'is_fitted': self.is_fitted,
             'n_estimators': self.detector.n_estimators if hasattr(self.detector, 'n_estimators') else 0
@@ -416,21 +416,21 @@ class OneClassSVMDetector(NoveltyDetector):
         logger.info("One-Class SVM novelty detector initialized")
     
     def fit(self, data: np.ndarray) -> None:
-        """Обучение One-Class SVM."""
+        """Training One-Class SVM."""
         if len(data.shape) == 1:
             data = data.reshape(1, -1)
         
         self.detector.fit(data)
         self.is_fitted = True
         
-        # Decision scores для calibration
+        # Decision scores for calibration
         scores = self.detector.decision_function(data)
         self.decision_scores.extend(scores)
         
         logger.info(f"One-Class SVM fitted on {len(data)} samples")
     
     def predict_novelty(self, data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """Prediction через SVM decision function."""
+        """Prediction through SVM decision function."""
         if not self.is_fitted:
             logger.warning("One-Class SVM not fitted.")
             return np.zeros(len(data)), np.zeros(len(data), dtype=bool)
@@ -450,7 +450,7 @@ class OneClassSVMDetector(NoveltyDetector):
         return novelty_scores, is_novel
     
     def update(self, data: np.ndarray, is_novel: Optional[np.ndarray] = None) -> None:
-        """SVM не поддерживает online updates."""
+        """SVM not поддерживает online updates."""
         pass
     
     def get_statistics(self) -> Dict[str, Any]:
@@ -489,7 +489,7 @@ class LOFDetector(NoveltyDetector):
         logger.info("LOF novelty detector initialized")
     
     def fit(self, data: np.ndarray) -> None:
-        """Обучение LOF."""
+        """Training LOF."""
         if len(data.shape) == 1:
             data = data.reshape(1, -1)
         
@@ -518,7 +518,7 @@ class LOFDetector(NoveltyDetector):
         return novelty_scores, is_novel
     
     def update(self, data: np.ndarray, is_novel: Optional[np.ndarray] = None) -> None:
-        """LOF не поддерживает online updates."""
+        """LOF not поддерживает online updates."""
         pass
     
     def get_statistics(self) -> Dict[str, Any]:
@@ -541,10 +541,10 @@ class LOFDetector(NoveltyDetector):
 
 class CryptoNoveltyDetector:
     """
-    Comprehensive novelty detection system для crypto trading.
+    Comprehensive novelty detection system for crypto trading.
     
-    Использует design pattern "Ensemble Strategy" для
-    robust novelty detection с multiple methods.
+    Uses design pattern "Ensemble Strategy" for
+    robust novelty detection with multiple methods.
     """
     
     def __init__(self, config: NoveltyDetectionConfig, input_dim: int, device: str = 'cuda'):
@@ -552,7 +552,7 @@ class CryptoNoveltyDetector:
         self.input_dim = input_dim
         self.device = device
         
-        # Инициализация detectors
+        # Initialize detectors
         self.detectors = {}
         if "autoencoder" in config.detection_methods:
             self.detectors["autoencoder"] = AutoencoderNoveltyDetector(config, input_dim, device)
@@ -583,18 +583,18 @@ class CryptoNoveltyDetector:
     
     def fit(self, data: np.ndarray, market_regimes: Optional[np.ndarray] = None) -> None:
         """
-        Обучение всех detectors.
+        Training всех detectors.
         
         Args:
             data: Training data [n_samples, input_dim]
-            market_regimes: Market regime labels для каждого sample
+            market_regimes: Market regime labels for each sample
         """
         if len(data.shape) == 1:
             data = data.reshape(1, -1)
         
         logger.info(f"Fitting novelty detectors on {len(data)} samples")
         
-        # Разделение data по market regimes если доступно
+        # Split data by market regimes if доступно
         if market_regimes is not None and self.config.market_regime_aware:
             unique_regimes = np.unique(market_regimes)
             for regime in unique_regimes:
@@ -603,7 +603,7 @@ class CryptoNoveltyDetector:
                 self.market_regimes_data[regime] = regime_data
                 logger.info(f"Regime {regime}: {len(regime_data)} samples")
         
-        # Обучение каждого detector
+        # Training each detector
         for name, detector in self.detectors.items():
             try:
                 start_time = time.time()
@@ -623,7 +623,7 @@ class CryptoNoveltyDetector:
         Ensemble novelty detection.
         
         Args:
-            data: Input data для detection
+            data: Input data for detection
             market_regime: Current market regime
             portfolio_volatility: Portfolio volatility level
             
@@ -633,7 +633,7 @@ class CryptoNoveltyDetector:
         if len(data.shape) == 1:
             data = data.reshape(1, -1)
         
-        # Получение predictions от каждого detector
+        # Get predictions from each detector
         detector_results = {}
         detector_scores = []
         detector_decisions = []
@@ -647,7 +647,7 @@ class CryptoNoveltyDetector:
                     'weight': self.method_weights.get(name, 0.0)
                 }
                 
-                # Для ensemble voting
+                # For ensemble voting
                 detector_scores.append(scores[0] if len(scores) > 0 else 0.0)
                 detector_decisions.append(decisions[0] if len(decisions) > 0 else False)
                 
@@ -695,14 +695,14 @@ class CryptoNoveltyDetector:
             temporal_change = np.linalg.norm(curr_context - prev_context)
             
             if self.config.temporal_context_length > 0:
-                # Weight novelty по temporal change
-                temporal_weight = min(temporal_change / 10.0, 2.0)  # Normalize и cap
+                # Weight novelty by temporal change
+                temporal_weight = min(temporal_change / 10.0, 2.0)  # Normalize and cap
                 ensemble_score *= temporal_weight
         
         # Binary decision
         is_novel = ensemble_score > self.ensemble_threshold
         
-        # Сохранение для history
+        # Save for history
         self.detection_history.append({
             'score': ensemble_score,
             'is_novel': is_novel,
@@ -735,7 +735,7 @@ class CryptoNoveltyDetector:
         
         update_stats = {}
         
-        # Обновление каждого detector
+        # Update each detector
         for name, detector in self.detectors.items():
             try:
                 detector.update(data, true_novelty)
@@ -749,7 +749,7 @@ class CryptoNoveltyDetector:
             len(self.detection_history) > self.config.threshold_update_frequency):
             self._update_ensemble_threshold()
         
-        # Performance evaluation если есть ground truth
+        # Performance evaluation if there is ground truth
         if true_novelty is not None:
             self._evaluate_performance(true_novelty)
         
@@ -802,7 +802,7 @@ class CryptoNoveltyDetector:
             self.false_positive_rate = false_positives / max(1, false_positives + true_negatives)
     
     def get_detection_statistics(self) -> Dict[str, Any]:
-        """Получение comprehensive detection statistics."""
+        """Get comprehensive detection statistics."""
         stats = {
             'ensemble_threshold': self.ensemble_threshold,
             'true_positive_rate': self.true_positive_rate,
@@ -847,7 +847,7 @@ def create_novelty_detection_system(
     input_dim: int
 ) -> CryptoNoveltyDetector:
     """
-    Factory function для создания novelty detection system.
+    Factory function for creation novelty detection system.
     
     Args:
         config: Novelty detection configuration
@@ -867,7 +867,7 @@ def create_novelty_detection_system(
 
 
 if __name__ == "__main__":
-    # Пример использования novelty detection
+    # Пример use novelty detection
     config = NoveltyDetectionConfig(
         detection_methods=["autoencoder", "isolation_forest"],
         ensemble_voting="weighted",
@@ -877,12 +877,12 @@ if __name__ == "__main__":
     input_dim = 128
     detector = create_novelty_detection_system(config, input_dim)
     
-    # Создание synthetic training data
+    # Create synthetic training data
     normal_data = np.random.randn(1000, input_dim)
     detector.fit(normal_data)
     
-    # Testing на novel data
-    novel_data = np.random.randn(100, input_dim) * 3  # Более extreme values
+    # Testing on novel data
+    novel_data = np.random.randn(100, input_dim) * 3  # More extreme values
     
     for i in range(10):
         test_sample = novel_data[i:i+1]

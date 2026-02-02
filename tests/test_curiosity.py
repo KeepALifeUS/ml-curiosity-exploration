@@ -1,8 +1,8 @@
 """
-Comprehensive tests для curiosity-driven exploration system.
+Comprehensive tests for curiosity-driven exploration system.
 
-Реализует thorough testing всех компонентов с enterprise patterns
-для reliable и robust system validation.
+Implements thorough testing всех components with enterprise patterns
+for reliable and robust system validation.
 """
 
 import pytest
@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch
 import tempfile
 import os
 
-# Import модулей для testing
+# Import модулей for testing
 from src.curiosity.icm import ICMConfig, ICMTrainer
 from src.curiosity.rnd import RNDConfig, RNDTrainer
 from src.curiosity.ngu import NGUConfig, NGUTrainer
@@ -30,7 +30,7 @@ from src.utils.reward_shaping import RewardShapingConfig, CryptoRewardShaper
 
 
 class TestICMSystem:
-    """Test suite для ICM system."""
+    """Test suite for ICM system."""
     
     def test_icm_initialization(self):
         """Test ICM initialization."""
@@ -75,7 +75,7 @@ class TestICMSystem:
 
 
 class TestRNDSystem:
-    """Test suite для RND system."""
+    """Test suite for RND system."""
     
     def test_rnd_initialization(self):
         """Test RND initialization."""
@@ -110,7 +110,7 @@ class TestRNDSystem:
 
 
 class TestNGUSystem:
-    """Test suite для NGU system."""
+    """Test suite for NGU system."""
     
     def test_ngu_initialization(self):
         """Test NGU initialization."""
@@ -138,7 +138,7 @@ class TestNGUSystem:
 
 
 class TestCountBasedExploration:
-    """Test suite для count-based exploration."""
+    """Test suite for count-based exploration."""
     
     def test_count_based_initialization(self):
         """Test count-based explorer initialization."""
@@ -168,7 +168,7 @@ class TestCountBasedExploration:
 
 
 class TestPredictionBasedExploration:
-    """Test suite для prediction-based exploration."""
+    """Test suite for prediction-based exploration."""
     
     def test_prediction_based_initialization(self):
         """Test prediction-based explorer initialization."""
@@ -194,7 +194,7 @@ class TestPredictionBasedExploration:
 
 
 class TestNoveltyDetection:
-    """Test suite для novelty detection."""
+    """Test suite for novelty detection."""
     
     def test_novelty_detector_initialization(self):
         """Test novelty detector initialization."""
@@ -209,7 +209,7 @@ class TestNoveltyDetection:
         config = NoveltyDetectionConfig(detection_methods=["autoencoder"])
         detector = CryptoNoveltyDetector(config, input_dim=64, device='cpu')
         
-        # Fit на normal data
+        # Fit on normal data
         normal_data = np.random.randn(100, 64)
         detector.fit(normal_data)
         
@@ -222,7 +222,7 @@ class TestNoveltyDetection:
 
 
 class TestStateVisitor:
-    """Test suite для state visitor system."""
+    """Test suite for state visitor system."""
     
     def test_state_visitor_initialization(self):
         """Test state visitor initialization."""
@@ -247,7 +247,7 @@ class TestStateVisitor:
 
 
 class TestMemorySystems:
-    """Test suite для memory systems."""
+    """Test suite for memory systems."""
     
     def test_episodic_memory(self):
         """Test episodic memory system."""
@@ -283,7 +283,7 @@ class TestMemorySystems:
         
         assert buffer.size == 1
         
-        # Add more для sampling
+        # Add more for sampling
         for _ in range(20):
             buffer.add(
                 np.random.randn(10), np.random.randn(3), np.random.randn(),
@@ -298,7 +298,7 @@ class TestMemorySystems:
 
 
 class TestAgents:
-    """Test suite для trading agents."""
+    """Test suite for trading agents."""
     
     def test_curious_trader(self):
         """Test curious trader agent."""
@@ -331,7 +331,7 @@ class TestAgents:
 
 
 class TestUtilities:
-    """Test suite для utility functions."""
+    """Test suite for utility functions."""
     
     def test_state_encoder(self):
         """Test state encoder."""
@@ -364,7 +364,7 @@ class TestUtilities:
 
 
 class TestIntegration:
-    """Integration tests для full system."""
+    """Integration tests for full system."""
     
     def test_full_exploration_pipeline(self):
         """Test complete exploration pipeline."""
@@ -410,13 +410,13 @@ class TestIntegration:
             assert isinstance(breakdown, dict)
     
     def test_checkpoint_saving_loading(self):
-        """Test checkpoint saving и loading."""
+        """Test checkpoint saving and loading."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Test ICM checkpointing
             config = ICMConfig(state_dim=32, action_dim=2)
             icm = ICMTrainer(config, device='cpu')
             
-            # Train для некоторых changes
+            # Train for некоторых changes
             states = torch.randn(16, 32)
             actions = torch.randn(16, 2)
             next_states = torch.randn(16, 32)

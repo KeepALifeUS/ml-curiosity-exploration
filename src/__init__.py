@@ -1,13 +1,13 @@
 """
 ML Curiosity Exploration System
 
-Enterprise-grade curiosity-driven exploration для autonomous cryptocurrency trading
+Enterprise-grade curiosity-driven exploration for autonomous cryptocurrency trading
 strategy discovery, built with enterprise patterns.
 
 🚀 Core Features:
-- Intrinsic Curiosity Module (ICM) для controllable exploration
-- Random Network Distillation (RND) для uncertainty-based exploration
-- Never Give Up (NGU) для persistent exploration with memory
+- Intrinsic Curiosity Module (ICM) for controllable exploration
+- Random Network Distillation (RND) for uncertainty-based exploration
+- Never Give Up (NGU) for persistent exploration with memory
 - Advanced novelty detection and state visitation tracking
 - Production-ready trading agents with curiosity integration
 

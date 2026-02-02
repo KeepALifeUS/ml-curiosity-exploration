@@ -1,8 +1,8 @@
 """
-Curious Trader Agent для autonomous strategy discovery.
+Curious Trader Agent for autonomous strategy discovery.
 
-Реализует advanced trading agent с curiosity-driven exploration
-для automatic discovery новых торговых стратегий в crypto markets.
+Implements advanced trading agent with curiosity-driven exploration
+for automatic discovery new trading strategies in crypto markets.
 """
 
 import torch
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CuriousTraderConfig:
-    """Конфигурация для curious trader agent."""
+    """Configuration for curious trader agent."""
     
     # State and action spaces
     state_dim: int = 256
@@ -52,9 +52,9 @@ class CuriousTraderConfig:
 
 class CuriousTrader:
     """
-    Advanced trading agent с curiosity-driven exploration.
+    Advanced trading agent with curiosity-driven exploration.
     
-    Применяет design pattern "Autonomous Agent" для
+    Applies design pattern "Autonomous Agent" for
     intelligent trading strategy discovery.
     """
     
@@ -98,7 +98,7 @@ class CuriousTrader:
         logger.info("Curious trader agent initialized")
     
     def _build_policy_network(self) -> nn.Module:
-        """Построение policy network."""
+        """Build policy network."""
         return nn.Sequential(
             nn.Linear(self.config.state_dim, 512),
             nn.ReLU(),
@@ -117,7 +117,7 @@ class CuriousTrader:
         state: np.ndarray,
         exploration: bool = True
     ) -> Tuple[np.ndarray, Dict[str, float]]:
-        """Action selection с curiosity-driven exploration."""
+        """Action selection with curiosity-driven exploration."""
         state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)
         
         with torch.no_grad():
@@ -126,7 +126,7 @@ class CuriousTrader:
         
         # Curiosity-driven exploration
         if exploration:
-            # Получение exploration bonus
+            # Get exploration bonus
             exploration_bonus, bonus_breakdown = self.exploration_manager.compute_exploration_bonus(
                 state=state,
                 action=action,
@@ -149,7 +149,7 @@ class CuriousTrader:
         market_price: float,
         market_data: Dict[str, float]
     ) -> Dict[str, Any]:
-        """Выполнение торговой операции."""
+        """Execute trading операции."""
         # Decode action
         position_change = action[0] * self.config.max_position_size
         
@@ -187,7 +187,7 @@ class CuriousTrader:
         current_portfolio_value: float,
         risk_metrics: Dict[str, float]
     ) -> float:
-        """Вычисление trading reward."""
+        """Computation trading reward."""
         # Portfolio return
         portfolio_return = (current_portfolio_value - prev_portfolio_value) / prev_portfolio_value
         
@@ -210,7 +210,7 @@ class CuriousTrader:
         next_state: np.ndarray,
         done: bool
     ) -> Dict[str, float]:
-        """Обновление agent с новым experience."""
+        """Update agent with новым experience."""
         # Compute curiosity rewards
         curiosity_rewards = {}
         total_curiosity_reward = 0.0
@@ -292,7 +292,7 @@ class CuriousTrader:
         self.optimizer.step()
     
     def get_portfolio_statistics(self) -> Dict[str, Any]:
-        """Получение статистики портфеля."""
+        """Get statistics portfolio."""
         if not self.trade_history:
             return {}
         

@@ -1,8 +1,8 @@
 """
-Reward Shaping utilities для curiosity-driven exploration.
+Reward Shaping utilities for curiosity-driven exploration.
 
-Реализует advanced reward shaping techniques с enterprise patterns
-для optimal learning signal formation в crypto trading.
+Implements advanced reward shaping techniques with enterprise patterns
+for optimal learning signal formation in crypto trading.
 """
 
 import numpy as np
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class RewardShapingConfig:
-    """Конфигурация для reward shaping."""
+    """Configuration for reward shaping."""
     
     # Reward components
     extrinsic_weight: float = 0.7
@@ -36,16 +36,16 @@ class RewardShapingConfig:
 
 class CryptoRewardShaper:
     """
-    Advanced reward shaping для crypto trading with curiosity.
+    Advanced reward shaping for crypto trading with curiosity.
     
-    Применяет design pattern "Reward Engineering" для
+    Applies design pattern "Reward Engineering" for
     optimal learning signal formation.
     """
     
     def __init__(self, config: RewardShapingConfig):
         self.config = config
         
-        # Running statistics для normalization
+        # Running statistics for normalization
         self.reward_stats = {
             'mean': 0.0,
             'std': 1.0,
@@ -71,7 +71,7 @@ class CryptoRewardShaper:
         context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, float]:
         """
-        Shape reward из multiple components.
+        Shape reward from multiple components.
         
         Args:
             extrinsic_reward: Base trading reward
@@ -82,7 +82,7 @@ class CryptoRewardShaper:
             context: Additional context
             
         Returns:
-            Dictionary с shaped rewards и breakdown
+            Dictionary with shaped rewards and breakdown
         """
         if context is None:
             context = {}
@@ -154,10 +154,10 @@ class CryptoRewardShaper:
         return breakdown
     
     def _get_regime_multiplier(self, market_regime: str) -> float:
-        """Multiplier на основе market regime."""
+        """Multiplier on основе market regime."""
         regime_multipliers = {
             'bull': 1.0,
-            'bear': 1.2,  # Higher rewards в bear market для exploration
+            'bear': 1.2,  # Higher rewards in bear market for exploration
             'sideways': 0.9,
             'volatile': 1.1,
             'neutral': 1.0
@@ -200,14 +200,14 @@ class CryptoRewardShaper:
         self.component_history['intrinsic'].append(intrinsic)
         self.component_history['total'].append(shaped)
         
-        # Keep только recent history
+        # Keep only recent history
         max_history = 10000
         for key in self.component_history:
             if len(self.component_history[key]) > max_history:
                 self.component_history[key] = self.component_history[key][-max_history//2:]
     
     def get_reward_statistics(self) -> Dict[str, Any]:
-        """Получение reward statistics."""
+        """Get reward statistics."""
         stats = {
             'normalization_stats': self.reward_stats.copy(),
             'component_statistics': {}
@@ -238,7 +238,7 @@ class CryptoRewardShaper:
 
 
 def create_reward_shaper(config: RewardShapingConfig) -> CryptoRewardShaper:
-    """Factory function для создания reward shaper."""
+    """Factory function for creation reward shaper."""
     return CryptoRewardShaper(config)
 
 

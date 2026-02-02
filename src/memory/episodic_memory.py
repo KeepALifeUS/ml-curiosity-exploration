@@ -1,8 +1,8 @@
 """
-Episodic Memory System для curiosity-driven exploration.
+Episodic Memory System for curiosity-driven exploration.
 
-Реализует sophisticated memory system для хранения и retrieval exploration experiences
-с enterprise patterns для scalable memory management.
+Implements sophisticated memory system for хранения and retrieval exploration experiences
+with enterprise patterns for scalable memory management.
 """
 
 import numpy as np
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class EpisodicMemoryConfig:
-    """Конфигурация для episodic memory system."""
+    """Configuration for episodic memory system."""
     
     # Memory capacity
     memory_capacity: int = 100000
@@ -43,10 +43,10 @@ class EpisodicMemoryConfig:
 
 class EpisodicMemorySystem:
     """
-    Enterprise-grade episodic memory для curiosity exploration.
+    Enterprise-grade episodic memory for curiosity exploration.
     
-    Применяет design pattern "Memory Architecture" для
-    efficient storage и retrieval exploration experiences.
+    Applies design pattern "Memory Architecture" for
+    efficient storage and retrieval exploration experiences.
     """
     
     def __init__(self, config: EpisodicMemoryConfig):
@@ -54,7 +54,7 @@ class EpisodicMemorySystem:
         self.capacity = config.memory_capacity
         self.embedding_dim = config.embedding_dim
         
-        # FAISS index для similarity search
+        # FAISS index for similarity search
         self.index = faiss.IndexFlatL2(config.embedding_dim)
         
         # Memory storage
@@ -77,7 +77,7 @@ class EpisodicMemorySystem:
         episode_id: int,
         timestamp: Optional[float] = None
     ) -> None:
-        """Добавление experience в memory."""
+        """Add experience in memory."""
         if timestamp is None:
             timestamp = time.time()
         
@@ -126,7 +126,7 @@ class EpisodicMemorySystem:
         return distances[0], indices[0]
     
     def _get_replacement_index(self) -> int:
-        """Получение index для replacement."""
+        """Get index for replacement."""
         if self.config.replacement_strategy == "fifo":
             index = self.current_index
             self.current_index = (self.current_index + 1) % self.capacity
@@ -137,13 +137,13 @@ class EpisodicMemorySystem:
             return np.random.randint(0, self.size)
     
     def _rebuild_index(self) -> None:
-        """Пересоздание FAISS index."""
+        """Rebuild FAISS index."""
         self.index = faiss.IndexFlatL2(self.embedding_dim)
         if self.size > 0:
             self.index.add(self.embeddings[:self.size].astype(np.float32))
     
     def save(self, filepath: str) -> None:
-        """Сохранение memory state."""
+        """Save memory state."""
         data = {
             'embeddings': self.embeddings[:self.size],
             'rewards': self.rewards[:self.size],
@@ -159,7 +159,7 @@ class EpisodicMemorySystem:
         logger.info(f"Episodic memory saved to {filepath}")
     
     def load(self, filepath: str) -> None:
-        """Загрузка memory state."""
+        """Load memory state."""
         with open(filepath, 'rb') as f:
             data = pickle.load(f)
         

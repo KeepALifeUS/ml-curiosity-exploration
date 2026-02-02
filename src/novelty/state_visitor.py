@@ -1,8 +1,8 @@
 """
-State Visitor System для отслеживания exploration coverage.
+State Visitor System for отслеживания exploration coverage.
 
-Реализует sophisticated tracking визитов states с enterprise patterns
-для comprehensive analysis exploration efficiency в crypto trading.
+Implements sophisticated tracking визитов states with enterprise patterns
+for comprehensive analysis exploration efficiency in crypto trading.
 """
 
 import numpy as np
@@ -18,14 +18,14 @@ from abc import ABC, abstractmethod
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Настройка логирования
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class StateVisitorConfig:
-    """Конфигурация для state visitor system."""
+    """Configuration for state visitor system."""
     
     # State representation
     state_representation: str = "hash"  # "hash", "cluster", "grid", "neural"
@@ -73,25 +73,25 @@ class StateVisitorConfig:
 
 class StateRepresentation(ABC):
     """
-    Абстрактный базовый класс для state representation methods.
+    Абстрактный base класс for state representation methods.
     
-    Применяет design pattern "Strategy Pattern" для
+    Applies design pattern "Strategy Pattern" for
     flexible state encoding strategies.
     """
     
     @abstractmethod
     def encode_state(self, state: np.ndarray) -> Union[str, int, tuple]:
-        """Кодирование state в compact representation."""
+        """Encode state in compact representation."""
         pass
     
     @abstractmethod
     def decode_state(self, encoded_state: Union[str, int, tuple]) -> Optional[np.ndarray]:
-        """Декодирование state representation обратно (если возможно)."""
+        """Декодирование state representation обратно (if возможно)."""
         pass
     
     @abstractmethod
     def get_similarity(self, state1: Union[str, int, tuple], state2: Union[str, int, tuple]) -> float:
-        """Вычисление similarity между encoded states."""
+        """Computation similarity between encoded states."""
         pass
 
 
@@ -99,7 +99,7 @@ class HashStateRepresentation(StateRepresentation):
     """
     Hash-based state representation.
     
-    Использует design pattern "Content Hashing" для
+    Uses design pattern "Content Hashing" for
     efficient state identification.
     """
     
@@ -115,11 +115,11 @@ class HashStateRepresentation(StateRepresentation):
         logger.info(f"Hash state representation initialized with precision {self.precision}")
     
     def encode_state(self, state: np.ndarray) -> str:
-        """Encode state через hashing."""
-        # Нормализация state
+        """Encode state through hashing."""
+        # Normalization state
         normalized_state = self._normalize_state(state)
         
-        # Квантизация для consistent hashing
+        # Квантизация for consistent hashing
         quantized_state = np.round(normalized_state * (2 ** self.precision)).astype(np.int32)
         
         # MD5 hash
@@ -134,11 +134,11 @@ class HashStateRepresentation(StateRepresentation):
         return None
     
     def get_similarity(self, state1: str, state2: str) -> float:
-        """Hamming distance между hashes."""
+        """Hamming distance between hashes."""
         if state1 == state2:
             return 1.0
         
-        # Простая similarity на основе shared prefixes
+        # Simple similarity on основе shared prefixes
         common_prefix = 0
         for c1, c2 in zip(state1, state2):
             if c1 == c2:
@@ -150,9 +150,9 @@ class HashStateRepresentation(StateRepresentation):
         return similarity
     
     def _normalize_state(self, state: np.ndarray) -> np.ndarray:
-        """Нормализация state для consistent hashing."""
+        """Normalization state for consistent hashing."""
         if self.state_mean is None:
-            # Первая инициализация
+            # Первая initialization
             self.state_mean = state.copy()
             self.state_std = np.ones_like(state)
             self.normalization_samples = 1
@@ -171,14 +171,14 @@ class HashStateRepresentation(StateRepresentation):
         
         # Normalization
         normalized = (state - self.state_mean) / (self.state_std + 1e-8)
-        return np.clip(normalized, -5, 5)  # Clip для stability
+        return np.clip(normalized, -5, 5)  # Clip for stability
 
 
 class GridStateRepresentation(StateRepresentation):
     """
-    Grid-based state representation для continuous spaces.
+    Grid-based state representation for continuous spaces.
     
-    Применяет design pattern "Spatial Discretization" для
+    Applies design pattern "Spatial Discretization" for
     structured state space representation.
     """
     
@@ -187,7 +187,7 @@ class GridStateRepresentation(StateRepresentation):
         self.state_dim = state_dim
         self.resolution = config.grid_resolution
         
-        # State bounds для grid construction
+        # State bounds for grid construction
         self.state_mins = np.full(state_dim, np.inf)
         self.state_maxs = np.full(state_dim, -np.inf)
         self.bounds_initialized = False
@@ -195,8 +195,8 @@ class GridStateRepresentation(StateRepresentation):
         logger.info(f"Grid state representation initialized: {state_dim}D, resolution {self.resolution}")
     
     def encode_state(self, state: np.ndarray) -> tuple:
-        """Encode state в grid coordinates."""
-        # Обновление bounds
+        """Encode state in grid coordinates."""
+        # Update bounds
         self.state_mins = np.minimum(self.state_mins, state)
         self.state_maxs = np.maximum(self.state_maxs, state)
         self.bounds_initialized = True
@@ -217,7 +217,7 @@ class GridStateRepresentation(StateRepresentation):
         return tuple(grid_coords)
     
     def decode_state(self, encoded_state: tuple) -> Optional[np.ndarray]:
-        """Decode grid coordinates обратно в approximate state."""
+        """Decode grid coordinates обратно in approximate state."""
         if not self.bounds_initialized:
             return None
         
@@ -233,7 +233,7 @@ class GridStateRepresentation(StateRepresentation):
         return decoded_state
     
     def get_similarity(self, state1: tuple, state2: tuple) -> float:
-        """Euclidean distance в grid space."""
+        """Euclidean distance in grid space."""
         if len(state1) != len(state2):
             return 0.0
         
@@ -248,8 +248,8 @@ class StateVisitor:
     """
     Comprehensive state visitation tracking system.
     
-    Использует design pattern "Behavioral Analytics" для
-    detailed analysis exploration patterns в crypto trading.
+    Uses design pattern "Behavioral Analytics" for
+    detailed analysis exploration patterns in crypto trading.
     """
     
     def __init__(self, config: StateVisitorConfig, state_dim: int):
@@ -407,7 +407,7 @@ class StateVisitor:
         return visit_stats
     
     def get_state_statistics(self, encoded_state: Union[str, tuple]) -> Dict[str, Any]:
-        """Получение статистики для конкретного state."""
+        """Get statistics for конкретного state."""
         if encoded_state not in self.state_visit_counts:
             return {}
         
@@ -442,7 +442,7 @@ class StateVisitor:
                 incoming_count += transitions[encoded_state]
         stats['total_incoming_transitions'] = incoming_count
         
-        # Portfolio и risk statistics
+        # Portfolio and risk statistics
         if encoded_state in self.portfolio_state_visits:
             portfolio_data = self.portfolio_state_visits[encoded_state]
             if portfolio_data.get('visit_count', 0) > 0:
@@ -537,7 +537,7 @@ class StateVisitor:
         return analysis
     
     def get_most_visited_states(self, top_k: int = 10) -> List[Tuple[str, int, Dict[str, Any]]]:
-        """Получение top-k наиболее посещенных states."""
+        """Get top-k наиболее посещенных states."""
         sorted_states = sorted(
             self.state_visit_counts.items(),
             key=lambda x: x[1],
@@ -552,7 +552,7 @@ class StateVisitor:
         return top_states
     
     def get_least_visited_states(self, top_k: int = 10) -> List[Tuple[str, int, Dict[str, Any]]]:
-        """Получение top-k наименее посещенных states."""
+        """Get top-k наименее посещенных states."""
         sorted_states = sorted(
             self.state_visit_counts.items(),
             key=lambda x: x[1]
@@ -566,11 +566,11 @@ class StateVisitor:
         return least_states
     
     def get_transition_matrix(self, top_states: Optional[int] = None) -> Dict[str, Any]:
-        """Построение transition matrix между states."""
+        """Build transition matrix between states."""
         if not self.transition_counts:
             return {}
         
-        # Выбор states для matrix
+        # Select states for matrix
         if top_states is not None:
             # Top visited states
             sorted_states = sorted(
@@ -582,7 +582,7 @@ class StateVisitor:
         else:
             selected_states = list(self.state_visit_counts.keys())
         
-        # Построение matrix
+        # Build matrix
         state_to_idx = {state: i for i, state in enumerate(selected_states)}
         matrix_size = len(selected_states)
         transition_matrix = np.zeros((matrix_size, matrix_size))
@@ -637,7 +637,7 @@ class StateVisitor:
                 axes[1, 0].set_title('Exploration Efficiency Over Time')
                 axes[1, 0].grid(True, alpha=0.3)
             
-            # 4. Market regime distribution (если доступно)
+            # 4. Market regime distribution (if доступно)
             if self.market_regime_visits:
                 regime_counts = {
                     regime: sum(states.values())
@@ -665,7 +665,7 @@ class StateVisitor:
             logger.warning(f"Error creating visualization: {e}")
     
     def save_state_visitor_data(self, filepath: str) -> None:
-        """Сохранение state visitor data."""
+        """Save state visitor data."""
         data = {
             'config': self.config,
             'state_visit_counts': dict(self.state_visit_counts),
@@ -698,7 +698,7 @@ class StateVisitor:
         logger.info(f"State visitor data saved to {filepath}")
     
     def load_state_visitor_data(self, filepath: str) -> None:
-        """Загрузка state visitor data."""
+        """Load state visitor data."""
         with open(filepath, 'rb') as f:
             data = pickle.load(f)
         
@@ -743,7 +743,7 @@ def create_state_visitor_system(
     state_dim: int
 ) -> StateVisitor:
     """
-    Factory function для создания state visitor system.
+    Factory function for creation state visitor system.
     
     Args:
         config: State visitor configuration
@@ -762,7 +762,7 @@ def create_state_visitor_system(
 
 
 if __name__ == "__main__":
-    # Пример использования state visitor
+    # Пример use state visitor
     config = StateVisitorConfig(
         state_representation="hash",
         track_temporal_patterns=True,
@@ -778,7 +778,7 @@ if __name__ == "__main__":
     
     for episode in range(5):
         for step in range(200):
-            # Случайное состояние
+            # Random состояние
             state = np.random.randn(state_dim)
             
             # Context

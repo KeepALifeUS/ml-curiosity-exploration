@@ -1,8 +1,8 @@
 """
-State Encoder utilities для curiosity-driven exploration.
+State Encoder utilities for curiosity-driven exploration.
 
-Реализует advanced state encoding methods с enterprise patterns
-для efficient state representation в crypto trading environments.
+Implements advanced state encoding methods with enterprise patterns
+for efficient state representation in crypto trading environments.
 """
 
 import torch
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class StateEncoderConfig:
-    """Конфигурация для state encoder."""
+    """Configuration for state encoder."""
     
     input_dim: int = 256
     encoding_dim: int = 64
@@ -36,9 +36,9 @@ class StateEncoderConfig:
 
 class CryptoStateEncoder(nn.Module):
     """
-    Advanced state encoder для crypto trading states.
+    Advanced state encoder for crypto trading states.
     
-    Применяет design pattern "Feature Engineering" для
+    Applies design pattern "Feature Engineering" for
     optimal state representation.
     """
     
@@ -78,15 +78,15 @@ class CryptoStateEncoder(nn.Module):
         logger.info(f"Crypto state encoder initialized: {config.input_dim} -> {config.encoding_dim}")
     
     def forward(self, state: torch.Tensor) -> torch.Tensor:
-        """Encode state в compact representation."""
+        """Encode state in compact representation."""
         batch_size = state.size(0)
         
-        # Split state по компонентам
+        # Split state by components
         market_data = state[:, :self.config.input_dim // 2]
         portfolio_data = state[:, self.config.input_dim // 2:3 * self.config.input_dim // 4]
         risk_data = state[:, 3 * self.config.input_dim // 4:]
         
-        # Encode каждый компонент
+        # Encode each component
         market_features = self.market_encoder(market_data)
         portfolio_features = self.portfolio_encoder(portfolio_data)
         risk_features = self.risk_encoder(risk_data)
@@ -99,7 +99,7 @@ class CryptoStateEncoder(nn.Module):
 
 
 def create_state_encoder(config: StateEncoderConfig) -> CryptoStateEncoder:
-    """Factory function для создания state encoder."""
+    """Factory function for creation state encoder."""
     return CryptoStateEncoder(config)
 
 

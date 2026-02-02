@@ -1,8 +1,8 @@
 """
-Exploration Agent для systematic exploration crypto trading environments.
+Exploration Agent for systematic exploration crypto trading environments.
 
-Реализует specialized agent для pure exploration с enterprise patterns
-для comprehensive strategy space exploration.
+Implements specialized agent for pure exploration with enterprise patterns
+for comprehensive strategy space exploration.
 
 Production-ready with:
 - Async/await support for non-blocking operations
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ExplorationAgentConfig:
-    """Конфигурация для exploration agent."""
+    """Configuration for exploration agent."""
     
     state_dim: int = 256
     action_dim: int = 10
@@ -65,10 +65,10 @@ class ExplorationAgentConfig:
 
 class ExplorationAgent:
     """
-    Specialized agent для systematic exploration.
+    Specialized agent for systematic exploration.
     
-    Применяет design pattern "Exploration Strategy" для
-    comprehensive coverage торгового пространства стратегий.
+    Applies design pattern "Exploration Strategy" for
+    comprehensive coverage торгового space strategies.
     """
     
     def __init__(self, config: ExplorationAgentConfig, device: Optional[str] = None):
@@ -117,7 +117,7 @@ class ExplorationAgent:
         exploration_context: Optional[Dict[str, Any]] = None
     ) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
-        Selection action для pure exploration (async version).
+        Selection action for pure exploration (async version).
 
         Returns:
             action: Selected action
@@ -211,7 +211,7 @@ class ExplorationAgent:
         return np.random.choice(strategies, p=weights)
     
     def _random_action(self) -> np.ndarray:
-        """Случайное action для exploration."""
+        """Random action for exploration."""
         return np.random.uniform(-1, 1, self.config.action_dim)
     
     def _curiosity_driven_action(
@@ -221,7 +221,7 @@ class ExplorationAgent:
     ) -> np.ndarray:
         """Curiosity-driven action selection."""
         # Simplified curiosity-based exploration
-        # В реальной реализации здесь был бы запрос к curiosity system
+        # In реальной implementations здесь был бы запрос to curiosity system
         
         # Add noise to previous successful actions
         if len(self.exploration_history) > 0:
@@ -253,8 +253,8 @@ class ExplorationAgent:
         return best_action if best_action is not None else self._random_action()
     
     def _calculate_action_entropy(self, action: np.ndarray) -> float:
-        """Вычисление entropy action для diversity measurement."""
-        # Discretize action для entropy calculation
+        """Computation entropy action for diversity measurement."""
+        # Discretize action for entropy calculation
         discretized = np.round(action * 10) / 10
         unique_values = len(np.unique(discretized))
         max_unique = len(discretized)
@@ -266,11 +266,11 @@ class ExplorationAgent:
         strategy: str,
         performance: float
     ) -> None:
-        """Обновление performance metrics для exploration strategy."""
+        """Update performance metrics for exploration strategy."""
         self.strategy_performance[strategy].append(performance)
     
     def get_exploration_statistics(self) -> Dict[str, Any]:
-        """Получение comprehensive exploration statistics."""
+        """Get comprehensive exploration statistics."""
         stats = {
             'exploration_step': self.exploration_step,
             'current_epsilon': self.current_epsilon,
@@ -315,13 +315,13 @@ class ExplorationAgent:
         return stats
     
     def reset_exploration(self) -> None:
-        """Reset exploration state для нового episode."""
+        """Reset exploration state for нового episode."""
         self.current_epsilon = self.config.epsilon
-        # Не очищаем полностью историю для learning
+        # Not очищаем completely историю for learning
     
     async def save_exploration_data(self, filepath: str) -> None:
         """
-        Сохранение exploration data (async version).
+        Save exploration data (async version).
 
         Args:
             filepath: Path to save file
@@ -362,7 +362,7 @@ class ExplorationAgent:
 
     async def load_exploration_data(self, filepath: str) -> None:
         """
-        Загрузка exploration data (async version).
+        Load exploration data (async version).
 
         Args:
             filepath: Path to load file

@@ -1,8 +1,8 @@
 """
-Curiosity Buffer для prioritized replay curiosity-driven experiences.
+Curiosity Buffer for prioritized replay curiosity-driven experiences.
 
-Реализует advanced replay buffer с enterprise patterns
-для efficient storage и sampling curiosity experiences.
+Implements advanced replay buffer with enterprise patterns
+for efficient storage and sampling curiosity experiences.
 """
 
 import numpy as np
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CuriosityBufferConfig:
-    """Конфигурация для curiosity buffer."""
+    """Configuration for curiosity buffer."""
     
     buffer_capacity: int = 100000
     prioritization_method: str = "curiosity"  # "curiosity", "td_error", "random"
@@ -33,9 +33,9 @@ class CuriosityBufferConfig:
 
 class CuriosityReplayBuffer:
     """
-    Prioritized replay buffer для curiosity experiences.
+    Prioritized replay buffer for curiosity experiences.
     
-    Использует design pattern "Priority Queue" для
+    Uses design pattern "Priority Queue" for
     intelligent sampling exploration experiences.
     """
     
@@ -66,7 +66,7 @@ class CuriosityReplayBuffer:
         done: bool,
         curiosity_reward: float
     ) -> None:
-        """Добавление experience в buffer."""
+        """Add experience in buffer."""
         # Calculate priority based on curiosity reward
         priority = abs(curiosity_reward) + 1e-6
         
@@ -94,7 +94,7 @@ class CuriosityReplayBuffer:
             self.current_index = (self.current_index + 1) % self.capacity
     
     def sample(self, batch_size: int) -> Dict[str, torch.Tensor]:
-        """Sample batch с prioritization."""
+        """Sample batch with prioritization."""
         if self.size == 0:
             return {}
         
@@ -124,7 +124,7 @@ class CuriosityReplayBuffer:
         return batch
     
     def update_priorities(self, indices: np.ndarray, priorities: np.ndarray) -> None:
-        """Обновление priorities для sampled experiences."""
+        """Update priorities for sampled experiences."""
         for idx, priority in zip(indices, priorities):
             self.priorities[idx] = abs(priority) + 1e-6
 
