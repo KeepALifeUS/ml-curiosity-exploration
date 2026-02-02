@@ -9,7 +9,7 @@ description = "Enterprise-grade Curiosity-Driven Exploration for Crypto Trading"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "CTB3 Team", email = "team@cryptobot.com"}
+    {name = "ML Team", email = "team@example.com"}
 ]
 keywords = [
     "curiosity", "exploration", "reinforcement-learning", 
