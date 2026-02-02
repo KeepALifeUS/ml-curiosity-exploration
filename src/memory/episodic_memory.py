@@ -1,7 +1,7 @@
 """
 Episodic Memory System for curiosity-driven exploration.
 
-Implements sophisticated memory system for хранения and retrieval exploration experiences
+Implements sophisticated memory system for storage and retrieval exploration experiences
 with enterprise patterns for scalable memory management.
 """
 
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     config = EpisodicMemoryConfig(memory_capacity=1000, embedding_dim=32)
     memory = EpisodicMemorySystem(config)
     
-    # Test добавления experiences
+    # Test addition experiences
     for i in range(100):
         embedding = np.random.randn(32)
         reward = np.random.randn()

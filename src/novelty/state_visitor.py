@@ -1,7 +1,7 @@
 """
-State Visitor System for отслеживания exploration coverage.
+State Visitor System for tracking exploration coverage.
 
-Implements sophisticated tracking визитов states with enterprise patterns
+Implements sophisticated tracking states with enterprise patterns
 for comprehensive analysis exploration efficiency in crypto trading.
 """
 
@@ -73,7 +73,7 @@ class StateVisitorConfig:
 
 class StateRepresentation(ABC):
     """
-    Абстрактный base класс for state representation methods.
+    Abstract base class for state representation methods.
     
     Applies design pattern "Strategy Pattern" for
     flexible state encoding strategies.
@@ -86,7 +86,7 @@ class StateRepresentation(ABC):
     
     @abstractmethod
     def decode_state(self, encoded_state: Union[str, int, tuple]) -> Optional[np.ndarray]:
-        """Декодирование state representation обратно (if возможно)."""
+        """Decoding state representation back (if )."""
         pass
     
     @abstractmethod
@@ -119,7 +119,7 @@ class HashStateRepresentation(StateRepresentation):
         # Normalization state
         normalized_state = self._normalize_state(state)
         
-        # Квантизация for consistent hashing
+        # for consistent hashing
         quantized_state = np.round(normalized_state * (2 ** self.precision)).astype(np.int32)
         
         # MD5 hash
@@ -130,7 +130,7 @@ class HashStateRepresentation(StateRepresentation):
         return state_hash
     
     def decode_state(self, encoded_state: str) -> Optional[np.ndarray]:
-        """Hash decoding невозможен."""
+        """Hash decoding ."""
         return None
     
     def get_similarity(self, state1: str, state2: str) -> float:
@@ -138,7 +138,7 @@ class HashStateRepresentation(StateRepresentation):
         if state1 == state2:
             return 1.0
         
-        # Simple similarity on основе shared prefixes
+        # Simple similarity on basis shared prefixes
         common_prefix = 0
         for c1, c2 in zip(state1, state2):
             if c1 == c2:
@@ -152,7 +152,7 @@ class HashStateRepresentation(StateRepresentation):
     def _normalize_state(self, state: np.ndarray) -> np.ndarray:
         """Normalization state for consistent hashing."""
         if self.state_mean is None:
-            # Первая initialization
+            # First initialization
             self.state_mean = state.copy()
             self.state_std = np.ones_like(state)
             self.normalization_samples = 1
@@ -217,7 +217,7 @@ class GridStateRepresentation(StateRepresentation):
         return tuple(grid_coords)
     
     def decode_state(self, encoded_state: tuple) -> Optional[np.ndarray]:
-        """Decode grid coordinates обратно in approximate state."""
+        """Decode grid coordinates back in approximate state."""
         if not self.bounds_initialized:
             return None
         
@@ -300,7 +300,7 @@ class StateVisitor:
         timestamp: Optional[float] = None
     ) -> Dict[str, Any]:
         """
-        Регистрация визита state.
+          state.
         
         Args:
             state: State vector
@@ -407,7 +407,7 @@ class StateVisitor:
         return visit_stats
     
     def get_state_statistics(self, encoded_state: Union[str, tuple]) -> Dict[str, Any]:
-        """Get statistics for конкретного state."""
+        """Get statistics for specific state."""
         if encoded_state not in self.state_visit_counts:
             return {}
         
@@ -537,7 +537,7 @@ class StateVisitor:
         return analysis
     
     def get_most_visited_states(self, top_k: int = 10) -> List[Tuple[str, int, Dict[str, Any]]]:
-        """Get top-k наиболее посещенных states."""
+        """Get top-k most visited states."""
         sorted_states = sorted(
             self.state_visit_counts.items(),
             key=lambda x: x[1],
@@ -552,7 +552,7 @@ class StateVisitor:
         return top_states
     
     def get_least_visited_states(self, top_k: int = 10) -> List[Tuple[str, int, Dict[str, Any]]]:
-        """Get top-k наименее посещенных states."""
+        """Get top-k visited states."""
         sorted_states = sorted(
             self.state_visit_counts.items(),
             key=lambda x: x[1]
@@ -637,7 +637,7 @@ class StateVisitor:
                 axes[1, 0].set_title('Exploration Efficiency Over Time')
                 axes[1, 0].grid(True, alpha=0.3)
             
-            # 4. Market regime distribution (if доступно)
+            # 4. Market regime distribution (if available)
             if self.market_regime_visits:
                 regime_counts = {
                     regime: sum(states.values())
@@ -762,7 +762,7 @@ def create_state_visitor_system(
 
 
 if __name__ == "__main__":
-    # Пример use state visitor
+    # Example use state visitor
     config = StateVisitorConfig(
         state_representation="hash",
         track_temporal_patterns=True,
@@ -773,12 +773,12 @@ if __name__ == "__main__":
     state_dim = 128
     visitor = create_state_visitor_system(config, state_dim)
     
-    # Симуляция exploration
+    # Simulation exploration
     market_regimes = ['bull', 'bear', 'sideways']
     
     for episode in range(5):
         for step in range(200):
-            # Random состояние
+            # Random state
             state = np.random.randn(state_dim)
             
             # Context

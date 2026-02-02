@@ -1,7 +1,7 @@
 """
 Novelty Detection System for crypto trading environments.
 
-Implements advanced methods for обнаружения novel states and patterns
+Implements advanced methods for detection novel states and patterns
 with enterprise patterns for real-time anomaly detection.
 """
 
@@ -74,7 +74,7 @@ class NoveltyDetectionConfig:
 
 class NoveltyDetector(ABC):
     """
-    Абстрактный base класс for novelty detection methods.
+    Abstract base class for novelty detection methods.
     
     Applies design pattern "Strategy Pattern" for
     flexible novelty detection approaches.
@@ -268,7 +268,7 @@ class AutoencoderNoveltyDetector(NoveltyDetector):
         
         data_tensor = torch.FloatTensor(data).to(self.device)
         
-        # Update only on normal data (if известно)
+        # Update only on normal data (if )
         if is_novel is not None:
             normal_mask = ~is_novel
             if np.any(normal_mask):
@@ -360,7 +360,7 @@ class IsolationForestDetector(NoveltyDetector):
         if len(data.shape) == 1:
             data = data.reshape(1, -1)
         
-        # Decision function scores (чем меньше, тем more anomalous)
+        # Decision function scores (than less, that more anomalous)
         decision_scores = self.detector.decision_function(data)
         
         # Binary predictions
@@ -376,8 +376,8 @@ class IsolationForestDetector(NoveltyDetector):
         return novelty_scores, is_novel
     
     def update(self, data: np.ndarray, is_novel: Optional[np.ndarray] = None) -> None:
-        """Isolation Forest not поддерживает online updates."""
-        # Можем переобучить on new data if накопилось enough
+        """Isolation Forest not supports online updates."""
+        # on new data if enough
         pass
     
     def get_statistics(self) -> Dict[str, Any]:
@@ -450,7 +450,7 @@ class OneClassSVMDetector(NoveltyDetector):
         return novelty_scores, is_novel
     
     def update(self, data: np.ndarray, is_novel: Optional[np.ndarray] = None) -> None:
-        """SVM not поддерживает online updates."""
+        """SVM not supports online updates."""
         pass
     
     def get_statistics(self) -> Dict[str, Any]:
@@ -518,7 +518,7 @@ class LOFDetector(NoveltyDetector):
         return novelty_scores, is_novel
     
     def update(self, data: np.ndarray, is_novel: Optional[np.ndarray] = None) -> None:
-        """LOF not поддерживает online updates."""
+        """LOF not supports online updates."""
         pass
     
     def get_statistics(self) -> Dict[str, Any]:
@@ -583,7 +583,7 @@ class CryptoNoveltyDetector:
     
     def fit(self, data: np.ndarray, market_regimes: Optional[np.ndarray] = None) -> None:
         """
-        Training всех detectors.
+        Training all detectors.
         
         Args:
             data: Training data [n_samples, input_dim]
@@ -594,7 +594,7 @@ class CryptoNoveltyDetector:
         
         logger.info(f"Fitting novelty detectors on {len(data)} samples")
         
-        # Split data by market regimes if доступно
+        # Split data by market regimes if available
         if market_regimes is not None and self.config.market_regime_aware:
             unique_regimes = np.unique(market_regimes)
             for regime in unique_regimes:
@@ -729,7 +729,7 @@ class CryptoNoveltyDetector:
         true_novelty: Optional[np.ndarray] = None,
         market_regime: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Online update всех detectors."""
+        """Online update all detectors."""
         if len(data.shape) == 1:
             data = data.reshape(1, -1)
         
@@ -867,7 +867,7 @@ def create_novelty_detection_system(
 
 
 if __name__ == "__main__":
-    # Пример use novelty detection
+    # Example use novelty detection
     config = NoveltyDetectionConfig(
         detection_methods=["autoencoder", "isolation_forest"],
         ensemble_voting="weighted",

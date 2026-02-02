@@ -154,7 +154,7 @@ class CryptoRewardShaper:
         return breakdown
     
     def _get_regime_multiplier(self, market_regime: str) -> float:
-        """Multiplier on основе market regime."""
+        """Multiplier on basis market regime."""
         regime_multipliers = {
             'bull': 1.0,
             'bear': 1.2,  # Higher rewards in bear market for exploration

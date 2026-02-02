@@ -78,7 +78,7 @@ class EpisodicMemory:
         self.capacity = config.episodic_memory_capacity
         self.embedding_dim = config.embedding_dim
         
-        # FAISS index for быстрого поиска neighbors
+        # FAISS index for fast search neighbors
         if config.faiss_gpu and torch.cuda.is_available():
             try:
                 res = faiss.StandardGpuResources()
@@ -120,18 +120,18 @@ class EpisodicMemory:
         risk_level: float = 0.0
     ) -> None:
         """
-        Add нового experience in episodic memory.
+        Add new experience in episodic memory.
         
         Args:
-            embedding: State embedding for хранения
-            reward: Intrinsic reward for данного состояния
-            episode_id: ID эпизода
-            market_regime: Тип market regime
-            portfolio_state: Состояние portfolio
-            risk_level: Уровень риска
+            embedding: State embedding for storage
+            reward: Intrinsic reward for given state
+            episode_id: ID episode
+            market_regime: Type market regime
+            portfolio_state: State portfolio
+            risk_level: Level risk
         """
         if self.size < self.capacity:
-            # Простое addition if there is место
+            # Simple addition if there is
             index = self.size
             self.size += 1
         else:
@@ -144,20 +144,20 @@ class EpisodicMemory:
             else:  # random
                 index = np.random.randint(0, self.capacity)
         
-        # Remove старого embedding from index if он существует
+        # Remove embedding from index if
         if index < self.index.ntotal:
-            # FAISS not поддерживает removal, поэтому пересоздаем index
+            # FAISS not supports removal, therefore index
             if self.size >= self.capacity:
                 self._rebuild_index()
         
-        # Save нового experience
+        # Save new experience
         self.embeddings[index] = embedding.astype(np.float32)
         self.rewards[index] = reward
         self.episode_ids[index] = episode_id
         self.timestamps[index] = time.time()
         
         if portfolio_state is not None:
-            portfolio_state = portfolio_state[:20]  # Ограничение размера
+            portfolio_state = portfolio_state[:20] # Limitation size
             self.portfolio_states[index, :len(portfolio_state)] = portfolio_state
         
         self.market_regimes[index] = market_regime
@@ -175,15 +175,15 @@ class EpisodicMemory:
         exclude_episode: Optional[int] = None
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Search k ближайших neighbors for данного embedding.
+        Search k nearest neighbors for given embedding.
         
         Args:
             embedding: Query embedding
             k: Number neighbors (default: config.num_neighbors)
-            exclude_episode: Исключить experiences from данного эпизода
+            exclude_episode: experiences from given episode
             
         Returns:
-            Tuple (distances, indices) ближайших neighbors
+            Tuple (distances, indices) nearest neighbors
         """
         if k is None:
             k = min(self.config.num_neighbors, self.size)
@@ -194,19 +194,19 @@ class EpisodicMemory:
         # Search neighbors
         distances, indices = self.index.search(
             embedding.reshape(1, -1).astype(np.float32), 
-            min(k * 2, self.size)  # Больше кандидатов for фильтрации
+            min(k * 2, self.size) # More for
         )
         
         distances = distances[0]
         indices = indices[0]
         
-        # Фильтрация by episode_id if need to
+        # by episode_id if need to
         if exclude_episode is not None:
             valid_mask = self.episode_ids[indices] != exclude_episode
             distances = distances[valid_mask]
             indices = indices[valid_mask]
         
-        # Ограничение up to k neighbors
+        # Limitation up to k neighbors
         distances = distances[:k]
         indices = indices[:k]
         
@@ -237,7 +237,7 @@ class EpisodicMemory:
         if self.size == 0:
             return self.config.episodic_bonus_maximum
         
-        # Search ближайших neighbors (исключая current эпизод)
+        # Search nearest neighbors (excluding current )
         distances, indices = self.query_neighbors(
             embedding,
             exclude_episode=episode_id
@@ -251,14 +251,14 @@ class EpisodicMemory:
         similarities = np.exp(-distances / self.config.similarity_threshold)
         density_estimate = np.sum(similarities)
         
-        # Episodic bonus обратно пропорционален density
+        # Episodic bonus back density
         bonus = self.config.episodic_bonus_constant / np.sqrt(density_estimate + 1e-8)
         bonus = min(bonus, self.config.episodic_bonus_maximum)
         
         return bonus
     
     def get_market_regime_statistics(self, regime: int) -> Dict[str, float]:
-        """Get statistics for конкретного market regime."""
+        """Get statistics for specific market regime."""
         if self.size == 0:
             return {}
         
@@ -278,7 +278,7 @@ class EpisodicMemory:
     
     def _rebuild_index(self) -> None:
         """Rebuild FAISS index."""
-        # Save текущих embeddings
+        # Save current embeddings
         current_embeddings = self.embeddings[:self.size].copy()
         
         # Rebuild index
@@ -291,7 +291,7 @@ class EpisodicMemory:
         else:
             self.index = faiss.IndexFlatL2(self.config.embedding_dim)
         
-        # Add всех embeddings обратно
+        # Add all embeddings back
         if self.size > 0:
             self.index.add(current_embeddings.astype(np.float32))
     
@@ -404,7 +404,7 @@ class StateEmbedder(nn.Module):
         """
         batch_size = state.size(0)
         
-        # Split состояния on components
+        # Split state on components
         market_data = state[:, :self.config.state_dim // 2]
         portfolio_data = state[:, self.config.state_dim // 2:3 * self.config.state_dim // 4]
         risk_data = state[:, 3 * self.config.state_dim // 4:]
@@ -414,24 +414,24 @@ class StateEmbedder(nn.Module):
         portfolio_features = self.feature_extractors['portfolio'](portfolio_data)
         risk_features = self.feature_extractors['risk'](risk_data)
         
-        # Объединение features
+        # Merging features
         combined_features = torch.cat([market_features, portfolio_features, risk_features], dim=1)
         
         # Temporal encoding if there is context
         if temporal_context is not None:
-            # Add текущее состояние to контексту
+            # Add current state to
             extended_context = torch.cat([temporal_context, combined_features.unsqueeze(1)], dim=1)
             lstm_out, _ = self.temporal_encoder(extended_context)
-            # Use last выход
+            # Use last output
             temporal_embedding = lstm_out[:, -1]
         else:
-            # Use only текущее состояние
+            # Use only current state
             temporal_embedding = combined_features
-            # Пропускаем through LSTM for consistency
+            # through LSTM for consistency
             lstm_out, _ = self.temporal_encoder(temporal_embedding.unsqueeze(1))
             temporal_embedding = lstm_out[:, -1]
         
-        # Финальный embedding
+        # Final embedding
         embedding = self.embedding_layer(temporal_embedding)
         
         # L2 normalization for stable similarity computation
@@ -445,7 +445,7 @@ class NGUTrainer:
     Trainer for Never Give Up agent with RND and episodic memory.
     
     Implements design pattern "Multi-Component Learning" for
-    coordinated training всех components NGU.
+    coordinated training all components NGU.
     """
     
     def __init__(self, config: NGUConfig, device: str = 'cuda'):
@@ -456,7 +456,7 @@ class NGUTrainer:
         self.state_embedder = StateEmbedder(config).to(device)
         self.episodic_memory = EpisodicMemory(config)
         
-        # RND components (импортируем from rnd.py)
+        # RND components ( from rnd.py)
         from .rnd import RNDConfig, RNDTrainer
         rnd_config = RNDConfig(
             state_dim=config.state_dim,
@@ -539,7 +539,7 @@ class NGUTrainer:
             
             # Update temporal context
             if episode_id is not None:
-                # Сохраняем processed features for контекста
+                # Saving processed features for context
                 market_data = state[:, :self.config.state_dim // 2]
                 portfolio_data = state[:, self.config.state_dim // 2:3 * self.config.state_dim // 4]
                 risk_data = state[:, 3 * self.config.state_dim // 4:]
@@ -562,7 +562,7 @@ class NGUTrainer:
         risk_level: float = 0.0
     ) -> Tuple[float, Dict[str, float]]:
         """
-        Computation полного intrinsic reward through NGU.
+        Computation full intrinsic reward through NGU.
         
         Args:
             state: Current state
@@ -596,7 +596,7 @@ class NGUTrainer:
             risk_level=risk_level
         )
         
-        # Комбинирование rewards
+        # Combining rewards
         total_intrinsic_reward = self.current_beta * rnd_reward + (1 - self.current_beta) * episodic_bonus
         
         # Save for statistics
@@ -644,9 +644,9 @@ class NGUTrainer:
         
         embeddings = torch.cat(embeddings, dim=0)
         
-        # Contrastive loss for улучшения embeddings
-        # Positive pairs: states from одного эпизода
-        # Negative pairs: states from разных эпизодов
+        # Contrastive loss for improvements embeddings
+        # Positive pairs: states from one episode
+        # Negative pairs: states from different episodes
         contrastive_loss = self._compute_contrastive_loss(embeddings, episode_ids)
         
         contrastive_loss.backward()
@@ -655,7 +655,7 @@ class NGUTrainer:
         
         self.training_step += 1
         
-        # Объединение metrics
+        # Merging metrics
         metrics = {
             **rnd_metrics,
             'contrastive_loss': contrastive_loss.item(),
@@ -685,7 +685,7 @@ class NGUTrainer:
         episode_tensor = torch.tensor(episode_ids, device=self.device)
         positive_mask = (episode_tensor.unsqueeze(0) == episode_tensor.unsqueeze(1)).float()
         
-        # Убираем diagonal
+        # Removing diagonal
         positive_mask = positive_mask - torch.eye(batch_size, device=self.device)
         
         # Contrastive loss
@@ -696,14 +696,14 @@ class NGUTrainer:
         positive_log_prob = (positive_mask * log_prob).sum(dim=1)
         positive_counts = positive_mask.sum(dim=1)
         
-        # Избегаем деления on ноль
+        # on
         positive_counts = torch.clamp(positive_counts, min=1.0)
         loss = -(positive_log_prob / positive_counts).mean()
         
         return loss
     
     def reset_episode(self, episode_id: int) -> None:
-        """Сброс data эпизода."""
+        """Reset data episode."""
         if episode_id in self.temporal_contexts:
             self.temporal_contexts[episode_id].clear()
         self.episode_count += 1
@@ -721,7 +721,7 @@ class NGUTrainer:
         }
         torch.save(checkpoint, filepath)
         
-        # Save episodic memory отдельно
+        # Save episodic memory
         memory_filepath = filepath.replace('.pth', '_memory.npz')
         self.episodic_memory.save(memory_filepath)
         
@@ -759,7 +759,7 @@ class NGUTrainer:
         logger.info(f"NGU checkpoint loaded from {filepath}")
     
     def get_statistics(self) -> Dict[str, Any]:
-        """Get подробной statistics NGU."""
+        """Get detailed statistics NGU."""
         stats = {
             'training_step': self.training_step,
             'episode_count': self.episode_count,
@@ -811,7 +811,7 @@ def create_ngu_system(config: NGUConfig) -> NGUTrainer:
 
 
 if __name__ == "__main__":
-    # Пример use NGU for crypto trading exploration
+    # Example use NGU for crypto trading exploration
     config = NGUConfig(
         state_dim=256,
         action_dim=5,
@@ -822,10 +822,10 @@ if __name__ == "__main__":
     
     ngu_trainer = create_ngu_system(config)
     
-    # Симуляция training
+    # Simulation training
     batch_size = 32
     states = torch.randn(batch_size, config.state_dim)
-    episode_ids = [i % 5 for i in range(batch_size)]  # 5 разных эпизодов
+    episode_ids = [i % 5 for i in range(batch_size)] # 5 different episodes
     
     # Training step
     metrics = ngu_trainer.train_step(states, episode_ids)
@@ -839,6 +839,6 @@ if __name__ == "__main__":
     print(f"Intrinsic reward: {intrinsic_reward:.4f}")
     print("Breakdown:", breakdown)
     
-    # Статистика
+    # Statistics
     stats = ngu_trainer.get_statistics()
     print("NGU Statistics:", stats)

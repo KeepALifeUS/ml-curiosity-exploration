@@ -1,7 +1,7 @@
 """
 Comprehensive tests for curiosity-driven exploration system.
 
-Implements thorough testing всех components with enterprise patterns
+Implements thorough testing all components with enterprise patterns
 for reliable and robust system validation.
 """
 
@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch
 import tempfile
 import os
 
-# Import модулей for testing
+# Import for testing
 from src.curiosity.icm import ICMConfig, ICMTrainer
 from src.curiosity.rnd import RNDConfig, RNDTrainer
 from src.curiosity.ngu import NGUConfig, NGUTrainer
@@ -416,7 +416,7 @@ class TestIntegration:
             config = ICMConfig(state_dim=32, action_dim=2)
             icm = ICMTrainer(config, device='cpu')
             
-            # Train for некоторых changes
+            # Train for changes
             states = torch.randn(16, 32)
             actions = torch.randn(16, 2)
             next_states = torch.randn(16, 32)

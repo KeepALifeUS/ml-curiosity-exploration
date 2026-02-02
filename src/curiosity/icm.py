@@ -1,8 +1,8 @@
 """
-Intrinsic Curiosity Module (ICM) for автономного исследования trading strategies.
+Intrinsic Curiosity Module (ICM) for exploration trading strategies.
 
 Implements curiosity-driven exploration through forward/inverse dynamics model
-with enterprise patterns for масштабируемой системы исследования.
+with enterprise patterns for system exploration.
 """
 
 import torch
@@ -28,7 +28,7 @@ class ICMConfig:
     feature_dim: int = 128
     hidden_dim: int = 256
     
-    # Weights потерь
+    # Weights loss
     forward_loss_weight: float = 0.2
     inverse_loss_weight: float = 0.8
     curiosity_reward_weight: float = 1.0
@@ -37,9 +37,9 @@ class ICMConfig:
     learning_rate: float = 1e-4
     batch_size: int = 256
     
-    # Crypto-trading специфичные parameters
-    market_features: int = 50  # Технические индикаторы
-    portfolio_features: int = 20  # Состояние portfolio
+    # Crypto-trading specific parameters
+    market_features: int = 50 # Technical indicators
+    portfolio_features: int = 20 # State portfolio
     risk_features: int = 10  # Risk metrics
     
     #  cloud-native settings
@@ -50,17 +50,17 @@ class ICMConfig:
 
 class FeatureEncoder(nn.Module):
     """
-    Кодировщик состояний for ICM with поддержкой crypto-trading data.
+     states for ICM with support crypto-trading data.
     
     Applies design pattern "Feature Representation Learning"
-    for эффективного представления состояний market.
+    for efficient representations states market.
     """
     
     def __init__(self, config: ICMConfig):
         super().__init__()
         self.config = config
         
-        # Многослойная architecture for разных типов data
+        # architecture for different types data
         self.market_encoder = nn.Sequential(
             nn.Linear(config.market_features, config.hidden_dim),
             nn.ReLU(),
@@ -82,7 +82,7 @@ class FeatureEncoder(nn.Module):
             nn.BatchNorm1d(config.hidden_dim // 4)
         )
         
-        # Объединяющий layer
+        # layer
         total_features = config.hidden_dim // 2 + config.hidden_dim // 2 + config.hidden_dim // 4
         self.fusion_layer = nn.Sequential(
             nn.Linear(total_features, config.feature_dim),
@@ -94,17 +94,17 @@ class FeatureEncoder(nn.Module):
     
     def forward(self, state: torch.Tensor) -> torch.Tensor:
         """
-        Encode состояния in compact feature representation.
+        Encode state in compact feature representation.
         
         Args:
-            state: Tensor формы [batch_size, state_dim]
+            state: Tensor [batch_size, state_dim]
             
         Returns:
             Encoded features: [batch_size, feature_dim]
         """
         batch_size = state.size(0)
         
-        # Split входного состояния on components
+        # Split state on components
         market_data = state[:, :self.config.market_features]
         portfolio_data = state[:, 
             self.config.market_features:self.config.market_features + self.config.portfolio_features
@@ -116,7 +116,7 @@ class FeatureEncoder(nn.Module):
         portfolio_features = self.portfolio_encoder(portfolio_data)
         risk_features = self.risk_encoder(risk_data)
         
-        # Объединение and финальное encoding
+        # Merging and encoding
         combined_features = torch.cat([market_features, portfolio_features, risk_features], dim=1)
         encoded_state = self.fusion_layer(combined_features)
         
@@ -125,17 +125,17 @@ class FeatureEncoder(nn.Module):
 
 class ForwardModel(nn.Module):
     """
-    Forward Dynamics Model for predictions следующего состояния.
+    Forward Dynamics Model for predictions next state.
     
-    Uses design pattern "Predictive Modeling" for точного
-    прогнозирования динамики market.
+    Uses design pattern "Predictive Modeling" for
+      market.
     """
     
     def __init__(self, config: ICMConfig):
         super().__init__()
         self.config = config
         
-        # Architecture with residual connections for стабильного training
+        # Architecture with residual connections for stable training
         self.action_encoder = nn.Linear(config.action_dim, config.hidden_dim // 4)
         
         self.forward_net = nn.ModuleList([
@@ -167,13 +167,13 @@ class ForwardModel(nn.Module):
         Returns:
             Predicted next state features [batch_size, feature_dim]
         """
-        # Encode действия
+        # Encode actions
         action_encoded = F.relu(self.action_encoder(action))
         
-        # Объединение состояния and действия
+        # Merging state and actions
         state_action = torch.cat([state_features, action_encoded], dim=1)
         
-        # Прохождение through forward network with residual connection
+        # through forward network with residual connection
         x = state_action
         for i, layer in enumerate(self.forward_net[:-1]):
             residual = x if i > 0 else None
@@ -181,7 +181,7 @@ class ForwardModel(nn.Module):
             if residual is not None and residual.shape == x.shape:
                 x = x + residual
         
-        # Финальный layer without residual
+        # Final layer without residual
         predicted_next_state = self.forward_net[-1](x)
         
         return predicted_next_state
@@ -189,17 +189,17 @@ class ForwardModel(nn.Module):
 
 class InverseModel(nn.Module):
     """
-    Inverse Dynamics Model for predictions действия between состояниями.
+    Inverse Dynamics Model for predictions actions between states.
     
     Applies design pattern "Action Understanding" for learning
-    контролируемых аспектов окружения.
+     aspects .
     """
     
     def __init__(self, config: ICMConfig):
         super().__init__()
         self.config = config
         
-        # Симметричная architecture for обработки пары состояний
+        # Symmetric architecture for processing states
         self.inverse_net = nn.Sequential(
             nn.Linear(config.feature_dim * 2, config.hidden_dim),
             nn.ReLU(),
@@ -223,7 +223,7 @@ class InverseModel(nn.Module):
     
     def forward(self, state_features: torch.Tensor, next_state_features: torch.Tensor) -> torch.Tensor:
         """
-        Prediction действия between двумя состояниями.
+        Prediction actions between two states.
         
         Args:
             state_features: Current state features [batch_size, feature_dim]
@@ -232,10 +232,10 @@ class InverseModel(nn.Module):
         Returns:
             Predicted action [batch_size, action_dim]
         """
-        # Объединение состояний
+        # Merging states
         state_pair = torch.cat([state_features, next_state_features], dim=1)
         
-        # Prediction действия
+        # Prediction actions
         predicted_action = self.inverse_net(state_pair)
         
         return predicted_action
@@ -243,10 +243,10 @@ class InverseModel(nn.Module):
 
 class CuriosityRewardCalculator:
     """
-    Вычислитель intrinsic reward on основе prediction error.
+    Calculator intrinsic reward on basis prediction error.
     
-    Uses design pattern "Reward Engineering" for формирования
-    эффективных сигналов любопытства.
+    Uses design pattern "Reward Engineering" for
+      .
     """
     
     def __init__(self, config: ICMConfig):
@@ -254,7 +254,7 @@ class CuriosityRewardCalculator:
         self.prediction_errors = []
         self.running_mean = 0.0
         self.running_var = 1.0
-        self.alpha = 0.01  # Coefficient for экспоненциального сглаживания
+        self.alpha = 0.01 # Coefficient for
         
         logger.info("Curiosity reward calculator initialized")
     
@@ -265,12 +265,12 @@ class CuriosityRewardCalculator:
         normalize: bool = True
     ) -> torch.Tensor:
         """
-        Computation curiosity reward on основе prediction error.
+        Computation curiosity reward on basis prediction error.
         
         Args:
-            predicted_next_state: Предсказанное следующее состояние
-            actual_next_state: Реальное следующее состояние
-            normalize: Применить normalization
+            predicted_next_state: next state
+            actual_next_state: next state
+            normalize: normalization
             
         Returns:
             Curiosity rewards for each sample in batch
@@ -293,7 +293,7 @@ class CuriosityRewardCalculator:
             # Normalization reward
             std = (self.running_var + 1e-8) ** 0.5
             normalized_error = (prediction_error - self.running_mean) / std
-            curiosity_reward = torch.clamp(normalized_error, 0, 5)  # Ограничение сверху
+            curiosity_reward = torch.clamp(normalized_error, 0, 5) # Limitation
         else:
             curiosity_reward = prediction_error
         
@@ -307,10 +307,10 @@ class CuriosityRewardCalculator:
 
 class ICMTrainer:
     """
-    Тренер for Intrinsic Curiosity Module with advanced optimization.
+    Trainer for Intrinsic Curiosity Module with advanced optimization.
     
     Implements design pattern "Distributed Learning" for
-    эффективного training on больших объемах data.
+    efficient training on large volumes data.
     """
     
     def __init__(self, config: ICMConfig, device: str = 'cuda'):
@@ -323,7 +323,7 @@ class ICMTrainer:
         self.inverse_model = InverseModel(config).to(device)
         self.curiosity_calculator = CuriosityRewardCalculator(config)
         
-        # Оптимизаторы with разными learning rates
+        # Optimizers with different learning rates
         self.optimizer = torch.optim.Adam([
             {'params': self.feature_encoder.parameters(), 'lr': config.learning_rate},
             {'params': self.forward_model.parameters(), 'lr': config.learning_rate * 0.5},
@@ -352,7 +352,7 @@ class ICMTrainer:
         next_states: torch.Tensor
     ) -> Dict[str, float]:
         """
-        Execute одного шага training ICM.
+        Execute one step training ICM.
         
         Args:
             states: Batch of current states [batch_size, state_dim]
@@ -360,11 +360,11 @@ class ICMTrainer:
             next_states: Batch of next states [batch_size, state_dim]
             
         Returns:
-            Dictionary with метриками training
+            Dictionary with metrics training
         """
         self.optimizer.zero_grad()
         
-        # Encode состояний
+        # Encode states
         state_features = self.feature_encoder(states)
         next_state_features = self.feature_encoder(next_states)
         
@@ -374,11 +374,11 @@ class ICMTrainer:
         # Inverse model prediction
         predicted_actions = self.inverse_model(state_features, next_state_features)
         
-        # Computation потерь
+        # Computation loss
         forward_loss = F.mse_loss(predicted_next_features, next_state_features.detach())
         inverse_loss = F.mse_loss(predicted_actions, actions)
         
-        # Total потеря
+        # Total
         total_loss = (
             self.config.forward_loss_weight * forward_loss +
             self.config.inverse_loss_weight * inverse_loss
@@ -479,16 +479,16 @@ class ICMTrainer:
 
 class CryptoICMEnvironment:
     """
-    Specialized обертка for интеграции ICM with crypto trading environment.
+    Specialized for integration ICM with crypto trading environment.
     
     Applies design pattern "Environment Adaptation" for
-    seamless интеграции with торговыми системами.
+    seamless integration with systems.
     """
     
     def __init__(self, base_env, icm_trainer: ICMTrainer, reward_mix: float = 0.1):
         self.base_env = base_env
         self.icm_trainer = icm_trainer
-        self.reward_mix = reward_mix  # Доля intrinsic reward in общем reward
+        self.reward_mix = reward_mix # Fraction intrinsic reward in reward
         
         self.last_state = None
         self.last_action = None
@@ -497,18 +497,18 @@ class CryptoICMEnvironment:
     
     def step(self, action):
         """
-        Execute шага with добавлением curiosity reward.
+        Execute step with curiosity reward.
         
         Args:
-            action: Действие агента
+            action:
             
         Returns:
             Tuple (next_state, total_reward, done, info)
         """
-        # Execute действия in base среде
+        # Execute actions in base environment
         next_state, extrinsic_reward, done, info = self.base_env.step(action)
         
-        # Computation curiosity reward if there is предыдущее состояние
+        # Computation curiosity reward if there is state
         intrinsic_reward = 0.0
         if self.last_state is not None and self.last_action is not None:
             state_tensor = torch.FloatTensor(self.last_state).unsqueeze(0).to(self.icm_trainer.device)
@@ -520,10 +520,10 @@ class CryptoICMEnvironment:
             )
             intrinsic_reward = curiosity_reward.item()
         
-        # Объединение extrinsic and intrinsic rewards
+        # Merging extrinsic and intrinsic rewards
         total_reward = extrinsic_reward + self.reward_mix * intrinsic_reward
         
-        # Update состояния for следующего шага
+        # Update state for next step
         self.last_state = next_state.copy() if hasattr(next_state, 'copy') else next_state
         self.last_action = action.copy() if hasattr(action, 'copy') else action
         
@@ -535,7 +535,7 @@ class CryptoICMEnvironment:
         return next_state, total_reward, done, info
     
     def reset(self):
-        """Сброс среды."""
+        """Reset ."""
         state = self.base_env.reset()
         self.last_state = state.copy() if hasattr(state, 'copy') else state
         self.last_action = None
@@ -565,17 +565,17 @@ def create_icm_system(config: ICMConfig) -> Tuple[ICMTrainer, CryptoICMEnvironme
 
 
 if __name__ == "__main__":
-    # Пример use ICM for crypto trading
+    # Example use ICM for crypto trading
     config = ICMConfig(
         state_dim=80,  # 50 market + 20 portfolio + 10 risk
-        action_dim=5,  # Buy/Sell/Hold for разных assets
+        action_dim=5, # Buy/Sell/Hold for different assets
         feature_dim=64,
         hidden_dim=128
     )
     
     icm_trainer = create_icm_system(config)
     
-    # Create synthetic data for демонстрации
+    # Create synthetic data for demonstration
     batch_size = 32
     states = torch.randn(batch_size, config.state_dim)
     actions = torch.randn(batch_size, config.action_dim)

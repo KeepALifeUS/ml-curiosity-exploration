@@ -133,7 +133,7 @@ if __name__ == "__main__":
     config = CuriosityBufferConfig(buffer_capacity=1000)
     buffer = CuriosityReplayBuffer(config)
     
-    # Test добавления experiences
+    # Test addition experiences
     for i in range(100):
         state = np.random.randn(10)
         action = np.random.randn(3)

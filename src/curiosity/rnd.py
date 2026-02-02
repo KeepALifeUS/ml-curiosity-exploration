@@ -1,7 +1,7 @@
 """
-Random Network Distillation (RND) for exploration through непредсказуемость.
+Random Network Distillation (RND) for exploration through .
 
-Implements advanced exploration mechanism through prediction error from случайной сети
+Implements advanced exploration mechanism through prediction error from random network
 with enterprise patterns for scalable curiosity systems.
 """
 
@@ -63,7 +63,7 @@ class RunningMeanStd:
     Running mean and standard deviation calculator for normalization.
     
     Uses design pattern "Streaming Statistics" for
-    эффективной обработки continuous data streams.
+     processing continuous data streams.
     """
     
     def __init__(self, epsilon: float = 1e-4, shape: Tuple = ()):
@@ -72,7 +72,7 @@ class RunningMeanStd:
         self.count = epsilon
         
     def update(self, x: np.ndarray) -> None:
-        """Update statistics новыми данными."""
+        """Update statistics new data."""
         batch_mean = np.mean(x, axis=0)
         batch_var = np.var(x, axis=0)
         batch_count = x.shape[0]
@@ -110,7 +110,7 @@ class RandomNetwork(nn.Module):
         super().__init__()
         self.config = config
         
-        # Build сети with заданной архитектурой
+        # Build network with architecture
         layers = []
         prev_dim = config.state_dim
         
@@ -118,7 +118,7 @@ class RandomNetwork(nn.Module):
             layers.extend([
                 nn.Linear(prev_dim, hidden_dim),
                 nn.ReLU(),
-                nn.LayerNorm(hidden_dim)  # Стабилизация for случайной сети
+                nn.LayerNorm(hidden_dim) # for random network
             ])
             prev_dim = hidden_dim
         
@@ -127,30 +127,30 @@ class RandomNetwork(nn.Module):
         
         self.network = nn.Sequential(*layers)
         
-        # Freeze parameters - сеть остается случайной
+        # Freeze parameters - network random
         for param in self.parameters():
             param.requires_grad = False
         
         logger.info(f"Random target network initialized with {sum(p.numel() for p in self.parameters())} parameters")
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass through случайную сеть."""
+        """Forward pass through network."""
         return self.network(x)
 
 
 class PredictorNetwork(nn.Module):
     """
-    Predictor network for training предсказанию random network output.
+    Predictor network for training random network output.
     
     Uses design pattern "Adaptive Learning" for
-    эффективного training representation.
+    efficient training representation.
     """
     
     def __init__(self, config: RNDConfig):
         super().__init__()
         self.config = config
         
-        # More сложная architecture for predictor network
+        # More architecture for predictor network
         layers = []
         prev_dim = config.state_dim
         
@@ -162,7 +162,7 @@ class PredictorNetwork(nn.Module):
             nn.Dropout(0.2)
         )
         
-        # Multi-head attention for выделения важных features
+        # Multi-head attention for extraction features
         self.attention = nn.MultiheadAttention(
             embed_dim=config.hidden_layers[0],
             num_heads=8,
@@ -181,10 +181,10 @@ class PredictorNetwork(nn.Module):
             ])
             prev_dim = hidden_dim
         
-        # Output layer with регуляризацией
+        # Output layer with regularization
         layers.extend([
             nn.Linear(prev_dim, config.predictor_network_dim),
-            nn.Tanh()  # Ограничение output values
+            nn.Tanh() # Limitation output values
         ])
         
         self.predictor = nn.Sequential(*layers)
@@ -203,10 +203,10 @@ class PredictorNetwork(nn.Module):
         """
         batch_size = x.size(0)
         
-        # Encode состояния
+        # Encode state
         encoded = self.state_encoder(x)
         
-        # Self-attention for выделения важных patterns
+        # Self-attention for extraction patterns
         # Add sequence dimension for attention
         encoded_seq = encoded.unsqueeze(1)  # [batch_size, 1, hidden_dim]
         attended, _ = self.attention(encoded_seq, encoded_seq, encoded_seq)
@@ -223,16 +223,16 @@ class PredictorNetwork(nn.Module):
 
 class CryptoStateProcessor:
     """
-    Обработчик состояний специфичных for crypto trading.
+     states for crypto trading.
     
     Implements design pattern "Domain-Specific Processing" for
-    оптимальной обработки финансовых data.
+     processing financial data.
     """
     
     def __init__(self, config: RNDConfig):
         self.config = config
         
-        # Weights for разных components состояния
+        # Weights for different components state
         self.market_weight = config.market_volatility_weight
         self.portfolio_weight = config.portfolio_diversity_weight
         self.risk_weight = config.risk_novelty_weight
@@ -246,7 +246,7 @@ class CryptoStateProcessor:
     
     def process_state(self, state: np.ndarray) -> np.ndarray:
         """
-        Processing состояния with consideration crypto-специфики.
+        Processing state with consideration crypto-specifics.
         
         Args:
             state: Raw state from trading environment
@@ -254,11 +254,11 @@ class CryptoStateProcessor:
         Returns:
             Processed state for RND
         """
-        # Split состояния on components (предполагаем структуру)
+        # Split state on components ( )
         total_features = state.shape[-1]
         market_end = int(total_features * 0.6)  # 60% - market data
         portfolio_end = int(total_features * 0.85)  # 25% - portfolio
-        # Остальное - риск metrics
+        # Rest - metrics
         
         market_data = state[..., :market_end]
         portfolio_data = state[..., market_end:portfolio_end]
@@ -274,7 +274,7 @@ class CryptoStateProcessor:
         portfolio_normalized = self.portfolio_stats.normalize(portfolio_data)
         risk_normalized = self.risk_stats.normalize(risk_data)
         
-        # Взвешенное объединение with crypto-specific weights
+        # Weighted with crypto-specific weights
         processed_state = np.concatenate([
             market_normalized * self.market_weight,
             portfolio_normalized * self.portfolio_weight,
@@ -289,19 +289,19 @@ class RNDTrainer:
     Trainer for Random Network Distillation with advanced optimization.
     
     Applies design pattern "Distributed Training" for
-    scalable learning on больших объемах trading data.
+    scalable learning on large volumes trading data.
     """
     
     def __init__(self, config: RNDConfig, device: str = 'cuda'):
         self.config = config
         self.device = device
         
-        # Initialize сетей
+        # Initialize networks
         self.target_network = RandomNetwork(config).to(device)
         self.predictor_network = PredictorNetwork(config).to(device)
         self.state_processor = CryptoStateProcessor(config)
         
-        # Оптимизатор only for predictor network
+        # Optimizer only for predictor network
         self.optimizer = torch.optim.Adam(
             self.predictor_network.parameters(),
             lr=config.learning_rate,
@@ -398,17 +398,17 @@ class RNDTrainer:
     
     def train_step(self, observations: torch.Tensor) -> Dict[str, float]:
         """
-        Execute одного шага training RND.
+        Execute one step training RND.
         
         Args:
             observations: Batch of observations for training
             
         Returns:
-            Dictionary with метриками training
+            Dictionary with metrics training
         """
         start_time = time.time()
         
-        # Processing состояний for crypto trading
+        # Processing states for crypto trading
         if isinstance(observations, np.ndarray):
             processed_obs = self.state_processor.process_state(observations)
             observations = torch.FloatTensor(processed_obs).to(self.device)
@@ -422,13 +422,13 @@ class RNDTrainer:
         target_output = self.target_network(normalized_obs)
         predicted_output = self.predictor_network(normalized_obs)
         
-        # Computation потери
+        # Computation
         prediction_loss = F.mse_loss(predicted_output, target_output.detach())
         
         # Backpropagation
         prediction_loss.backward()
         
-        # Gradient clipping for стабильности
+        # Gradient clipping for stability
         torch.nn.utils.clip_grad_norm_(
             self.predictor_network.parameters(), max_norm=1.0
         )
@@ -441,7 +441,7 @@ class RNDTrainer:
         update_time = time.time() - start_time
         self.updates_per_second = 0.9 * self.updates_per_second + 0.1 / update_time
         
-        # Computation текущих intrinsic rewards
+        # Computation current intrinsic rewards
         with torch.no_grad():
             current_rewards = self.compute_intrinsic_reward(observations)
         
@@ -506,7 +506,7 @@ class RNDTrainer:
         logger.info(f"RND checkpoint loaded from {filepath}")
     
     def get_statistics(self) -> Dict[str, Any]:
-        """Get подробной statistics RND."""
+        """Get detailed statistics RND."""
         return {
             'training_step': self.training_step,
             'updates_per_second': self.updates_per_second,
@@ -537,8 +537,8 @@ class CryptoRNDEnvironment:
     """
     Crypto trading environment with RND-based exploration.
     
-    Интегрирует design pattern "Environment Augmentation" for
-    enhanced exploration in финансовых рынках.
+    Integrates design pattern "Environment Augmentation" for
+    enhanced exploration in financial .
     """
     
     def __init__(
@@ -561,7 +561,7 @@ class CryptoRNDEnvironment:
     
     def step(self, action):
         """Step with RND exploration bonus."""
-        # Execute действия in base среде
+        # Execute actions in base environment
         next_state, extrinsic_reward, done, info = self.base_env.step(action)
         
         # Get RND exploration bonus
@@ -571,7 +571,7 @@ class CryptoRNDEnvironment:
         
         intrinsic_reward = self.rnd_trainer.compute_intrinsic_reward(state_tensor).item()
         
-        # Decay exploration bonus by ходу эпизода
+        # Decay exploration bonus by episode
         decayed_intrinsic_reward = intrinsic_reward * (self.exploration_bonus_decay ** self.episode_step)
         
         # Total reward
@@ -581,7 +581,7 @@ class CryptoRNDEnvironment:
         self.episode_step += 1
         self.episode_intrinsic_rewards.append(intrinsic_reward)
         
-        # Информация for анализа
+        # Information for analysis
         info.update({
             'intrinsic_reward': intrinsic_reward,
             'decayed_intrinsic_reward': decayed_intrinsic_reward,
@@ -601,7 +601,7 @@ class CryptoRNDEnvironment:
         """Reset environment."""
         state = self.base_env.reset()
         
-        # Сброс episode statistics
+        # Reset episode statistics
         self.episode_step = 0
         self.total_episodes += 1
         self.episode_intrinsic_rewards = []
@@ -634,7 +634,7 @@ def create_rnd_system(config: RNDConfig) -> RNDTrainer:
 
 
 if __name__ == "__main__":
-    # Пример use RND for crypto trading exploration
+    # Example use RND for crypto trading exploration
     config = RNDConfig(
         state_dim=128,  # Crypto market state
         target_network_dim=256,
@@ -663,6 +663,6 @@ if __name__ == "__main__":
     exploration_bonus = rnd_trainer.get_exploration_bonus(single_obs)
     print(f"Exploration bonus: {exploration_bonus:.4f}")
     
-    # Статистика
+    # Statistics
     stats = rnd_trainer.get_statistics()
     print("RND Statistics:", stats)

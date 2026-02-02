@@ -149,7 +149,7 @@ class CuriousTrader:
         market_price: float,
         market_data: Dict[str, float]
     ) -> Dict[str, Any]:
-        """Execute trading операции."""
+        """Execute trading ."""
         # Decode action
         position_change = action[0] * self.config.max_position_size
         
@@ -210,7 +210,7 @@ class CuriousTrader:
         next_state: np.ndarray,
         done: bool
     ) -> Dict[str, float]:
-        """Update agent with новым experience."""
+        """Update agent with new experience."""
         # Compute curiosity rewards
         curiosity_rewards = {}
         total_curiosity_reward = 0.0

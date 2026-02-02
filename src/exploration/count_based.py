@@ -1,7 +1,7 @@
 """
 Count-Based Exploration for crypto trading environments.
 
-Implements exploration strategies основанные on state visitation counts
+Implements exploration strategies based on state visitation counts
 with enterprise patterns for scalable exploration tracking.
 """
 
@@ -60,7 +60,7 @@ class CountBasedConfig:
 
 class StateDiscretizer(ABC):
     """
-    Абстрактный base класс for state discretization.
+    Abstract base class for state discretization.
     
     Applies design pattern "Strategy Pattern" for
     flexible state representation strategies.
@@ -68,7 +68,7 @@ class StateDiscretizer(ABC):
     
     @abstractmethod
     def discretize(self, state: np.ndarray) -> Union[str, int, tuple]:
-        """Дискретизация состояния."""
+        """Discretization state."""
         pass
     
     @abstractmethod
@@ -90,13 +90,13 @@ class AdaptiveGridDiscretizer(StateDiscretizer):
         self.state_dim = state_dim
         self.bins = config.state_discretization_bins
         
-        # Adaptive границы for each dimension
+        # Adaptive for each dimension
         self.state_mins = np.full(state_dim, np.inf)
         self.state_maxs = np.full(state_dim, -np.inf)
         self.state_means = np.zeros(state_dim)
         self.state_stds = np.ones(state_dim)
         
-        # Statistics for адаптации
+        # Statistics for adaptation
         self.update_count = 0
         self.state_history = []
         
@@ -104,21 +104,21 @@ class AdaptiveGridDiscretizer(StateDiscretizer):
     
     def discretize(self, state: np.ndarray) -> tuple:
         """
-        Дискретизация state in grid coordinates.
+        Discretization state in grid coordinates.
         
         Args:
             state: Continuous state vector
             
         Returns:
-            Tuple with дискретными coordinates
+            Tuple with coordinates
         """
         # Normalization state
         normalized_state = (state - self.state_means) / (self.state_stds + 1e-8)
         
-        # Ограничение in reasonable range
+        # Limitation in reasonable range
         clipped_state = np.clip(normalized_state, -3, 3)
         
-        # Дискретизация each dimension
+        # Discretization each dimension
         discrete_coords = []
         for i, value in enumerate(clipped_state):
             # Mapping [-3, 3] to [0, bins-1]
@@ -130,7 +130,7 @@ class AdaptiveGridDiscretizer(StateDiscretizer):
     
     def update(self, states: np.ndarray) -> None:
         """
-        Update discretization parameters on основе new states.
+        Update discretization parameters on basis new states.
         
         Args:
             states: Batch of states [batch_size, state_dim]
@@ -178,7 +178,7 @@ class HashBasedDiscretizer(StateDiscretizer):
         self.hash_dim = config.hash_state_dim
         self.tolerance = config.state_tolerance
         
-        # Случайные проекции for LSH
+        # Random for LSH
         self.random_projections = np.random.randn(state_dim, self.hash_dim)
         self.projection_biases = np.random.uniform(0, 2 * np.pi, self.hash_dim)
         
@@ -191,13 +191,13 @@ class HashBasedDiscretizer(StateDiscretizer):
     
     def discretize(self, state: np.ndarray) -> str:
         """
-        Hash-based дискретизация state.
+        Hash-based discretization state.
         
         Args:
             state: Continuous state vector
             
         Returns:
-            Hash string представляющий discrete state
+            Hash string discrete state
         """
         # Normalization state
         normalized_state = (state - self.state_mean) / (self.state_std + 1e-8)
@@ -247,7 +247,7 @@ class CryptoStateDiscretizer(StateDiscretizer):
     Specialized discretizer for crypto trading states.
     
     Applies design pattern "Domain-Specific Processing" for
-    optimal representation финансовых data.
+    optimal representation financial data.
     """
     
     def __init__(self, config: CountBasedConfig, state_dim: int):
@@ -279,7 +279,7 @@ class CryptoStateDiscretizer(StateDiscretizer):
     
     def discretize(self, state: np.ndarray) -> tuple:
         """
-        Discretization with consideration crypto trading специфики.
+        Discretization with consideration crypto trading specifics.
         
         Args:
             state: Trading state vector
@@ -292,7 +292,7 @@ class CryptoStateDiscretizer(StateDiscretizer):
         portfolio_data = state[self.market_dim:self.market_dim + self.portfolio_dim]
         risk_data = state[-self.risk_dim:]
         
-        # Дискретизация each component
+        # Discretization each component
         market_discrete = self.market_discretizer.discretize(market_data)
         portfolio_hash = self.portfolio_discretizer.discretize(portfolio_data)
         risk_discrete = self.risk_discretizer.discretize(risk_data)
@@ -306,7 +306,7 @@ class CryptoStateDiscretizer(StateDiscretizer):
         risk_bucket = min(int(abs(risk_level) * self.risk_level_bins), 
                          self.risk_level_bins - 1)
         
-        # Объединение in composite key
+        # Merging in composite key
         composite_key = (
             market_discrete,
             portfolio_hash,
@@ -318,7 +318,7 @@ class CryptoStateDiscretizer(StateDiscretizer):
         return composite_key
     
     def update(self, states: np.ndarray) -> None:
-        """Update всех component discretizers."""
+        """Update all component discretizers."""
         if len(states.shape) == 1:
             states = states.reshape(1, -1)
         
@@ -390,10 +390,10 @@ class CountBasedExplorer:
         Returns:
             Exploration bonus value
         """
-        # Дискретизация state
+        # Discretization state
         discrete_state = self.discretizer.discretize(state)
         
-        # Get count (with consideration market regime if указан)
+        # Get count (with consideration market regime if )
         if market_regime is not None and self.config.market_regime_separation:
             count = self.regime_counts[market_regime][discrete_state]
         else:
@@ -403,7 +403,7 @@ class CountBasedExplorer:
         if count == 0:
             bonus = self.config.max_count_bonus
         else:
-            # Использование псевдо-count формулы
+            # Usage -count
             bonus = self.config.count_bonus_coefficient / (count ** self.config.count_bonus_power)
             bonus = np.clip(bonus, self.config.min_count_bonus, self.config.max_count_bonus)
         
@@ -424,7 +424,7 @@ class CountBasedExplorer:
         Returns:
             Update statistics
         """
-        # Дискретизация state
+        # Discretization state
         discrete_state = self.discretizer.discretize(state)
         
         # Update counts
@@ -469,7 +469,7 @@ class CountBasedExplorer:
         return update_stats
     
     def get_exploration_statistics(self) -> Dict[str, Any]:
-        """Get подробной statistics exploration."""
+        """Get detailed statistics exploration."""
         if len(self.state_counts) == 0:
             return {}
         
@@ -513,10 +513,10 @@ class CountBasedExplorer:
     
     def get_state_density_map(self, top_k: int = 100) -> Dict[str, float]:
         """
-        Get density map наиболее посещенных states.
+        Get density map most visited states.
         
         Args:
-            top_k: Number top states for возврата
+            top_k: Number top states for return
             
         Returns:
             Dictionary {state: normalized_density}
@@ -579,7 +579,7 @@ class CountBasedEnvironment:
     """
     Environment wrapper with count-based exploration bonuses.
     
-    Интегрирует design pattern "Environment Augmentation" for
+    Integrates design pattern "Environment Augmentation" for
     enhanced exploration in crypto trading.
     """
     
@@ -613,7 +613,7 @@ class CountBasedEnvironment:
     
     def step(self, action):
         """Step with count-based exploration bonus."""
-        # Execute action in base среде
+        # Execute action in base environment
         next_state, extrinsic_reward, done, info = self.base_env.step(action)
         
         # Get market regime from info if available
@@ -662,7 +662,7 @@ class CountBasedEnvironment:
         return state
     
     def get_exploration_report(self) -> Dict[str, Any]:
-        """Get подробного отчета about exploration."""
+        """Get detailed report about exploration."""
         base_stats = self.explorer.get_exploration_statistics()
         density_map = self.explorer.get_state_density_map(50)
         
@@ -701,7 +701,7 @@ def create_count_based_system(
 
 
 if __name__ == "__main__":
-    # Пример use count-based exploration
+    # Example use count-based exploration
     config = CountBasedConfig(
         state_discretization_bins=50,
         hash_state_dim=16,
@@ -712,12 +712,12 @@ if __name__ == "__main__":
     state_dim = 128
     explorer = create_count_based_system(config, state_dim)
     
-    # Симуляция exploration
+    # Simulation exploration
     for episode in range(5):
         for step in range(100):
-            # Random состояние
+            # Random state
             state = np.random.randn(state_dim)
-            market_regime = episode % 3  # 3 разных regime
+            market_regime = episode % 3 # 3 different regime
             
             # Get exploration bonus
             bonus = explorer.get_count_bonus(state, market_regime)
@@ -729,7 +729,7 @@ if __name__ == "__main__":
                 print(f"Episode {episode}, Step {step}: "
                       f"Bonus={bonus:.4f}, Count={update_stats['new_count']}")
     
-    # Статистика exploration
+    # Statistics exploration
     stats = explorer.get_exploration_statistics()
     print("\nExploration Statistics:")
     for key, value in stats.items():

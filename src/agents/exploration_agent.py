@@ -68,7 +68,7 @@ class ExplorationAgent:
     Specialized agent for systematic exploration.
     
     Applies design pattern "Exploration Strategy" for
-    comprehensive coverage торгового space strategies.
+    comprehensive coverage trading space strategies.
     """
     
     def __init__(self, config: ExplorationAgentConfig, device: Optional[str] = None):
@@ -221,7 +221,7 @@ class ExplorationAgent:
     ) -> np.ndarray:
         """Curiosity-driven action selection."""
         # Simplified curiosity-based exploration
-        # In реальной implementations здесь был бы запрос to curiosity system
+        # In implementations was to curiosity system
         
         # Add noise to previous successful actions
         if len(self.exploration_history) > 0:
@@ -315,9 +315,9 @@ class ExplorationAgent:
         return stats
     
     def reset_exploration(self) -> None:
-        """Reset exploration state for нового episode."""
+        """Reset exploration state for new episode."""
         self.current_epsilon = self.config.epsilon
-        # Not очищаем completely историю for learning
+        # Not completely history for learning
     
     async def save_exploration_data(self, filepath: str) -> None:
         """

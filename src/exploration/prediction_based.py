@@ -1,7 +1,7 @@
 """
 Prediction-Based Exploration for crypto trading environments.
 
-Implements exploration strategies основанные on prediction uncertainty
+Implements exploration strategies based on prediction uncertainty
 with enterprise patterns for intelligent strategy discovery.
 """
 
@@ -72,7 +72,7 @@ class PredictionBasedConfig:
 
 class UncertaintyEstimator(ABC):
     """
-    Абстрактный base класс for uncertainty estimation.
+    Abstract base class for uncertainty estimation.
     
     Applies design pattern "Strategy Pattern" for
     flexible uncertainty quantification methods.
@@ -122,7 +122,7 @@ class EnsemblePredictor(nn.Module):
             model = self._create_prediction_model()
             self.ensemble_models.append(model)
         
-        # Отдельные optimizers for each model ensemble
+        # optimizers for each model ensemble
         self.optimizers = [
             torch.optim.Adam(model.parameters(), lr=config.learning_rate)
             for model in self.ensemble_models
@@ -182,7 +182,7 @@ class EnsemblePredictor(nn.Module):
             nn.Linear(prev_dim, prev_dim // 4),
             nn.ReLU(),
             nn.Linear(prev_dim // 4, self.config.state_dim // 2),
-            nn.Softplus()  # Ensures положительные values
+            nn.Softplus() # Ensures values
         )
         
         portfolio_uncertainty = nn.Sequential(
@@ -199,9 +199,9 @@ class EnsemblePredictor(nn.Module):
             nn.Softplus()
         )
         
-        # Объединение in one model
+        # Merging in one model
         model = nn.ModuleDict({
-            'encoder': nn.Sequential(*layers[:-1]),  # Without последнего dropout
+            'encoder': nn.Sequential(*layers[:-1]), # Without last dropout
             'market_head': market_head,
             'portfolio_head': portfolio_head,
             'risk_head': risk_head,
@@ -221,11 +221,11 @@ class EnsemblePredictor(nn.Module):
             actions: Input actions [batch_size, action_dim]
             
         Returns:
-            Dictionary with predictions and uncertainties from всех models
+            Dictionary with predictions and uncertainties from all models
         """
         batch_size = states.size(0)
         
-        # Объединение states and actions
+        # Merging states and actions
         inputs = torch.cat([states, actions], dim=1)
         
         # Predictions from each model in ensemble
@@ -260,7 +260,7 @@ class EnsemblePredictor(nn.Module):
             ensemble_predictions['portfolio_uncertainty'].append(portfolio_unc)
             ensemble_predictions['risk_uncertainty'].append(risk_unc)
         
-        # Стacking predictions
+        # acking predictions
         for key in ensemble_predictions:
             ensemble_predictions[key] = torch.stack(ensemble_predictions[key], dim=0)
         
@@ -383,7 +383,7 @@ class EnsemblePredictor(nn.Module):
             component_losses['portfolio'] += portfolio_loss.item()
             component_losses['risk'] += risk_loss.item()
         
-        # Усреднение losses
+        # Averaging losses
         avg_loss = total_loss / self.ensemble_size
         for key in component_losses:
             component_losses[key] /= self.ensemble_size
@@ -404,7 +404,7 @@ class EnsemblePredictor(nn.Module):
         targets: torch.Tensor,
         uncertainties: torch.Tensor
     ) -> torch.Tensor:
-        """Heteroscedastic loss учитывающий predicted uncertainty."""
+        """Heteroscedastic loss predicted uncertainty."""
         # Precision = 1 / variance
         precisions = 1.0 / (uncertainties + 1e-8)
         
@@ -428,7 +428,7 @@ class EnsemblePredictor(nn.Module):
             current_encoded = current_model['encoder'](inputs)
             current_market = current_model['market_head'](current_encoded)
             
-            # Сравнение with другими моделями
+            # Comparison with other models
             diversity_losses = []
             for other_idx, other_model in enumerate(self.ensemble_models):
                 if other_idx != model_idx:
@@ -536,7 +536,7 @@ class PredictionBasedExplorer:
             state, action
         )
         
-        # Комбинирование uncertainties
+        # Combining uncertainties
         total_epistemic = epistemic_unc.mean(dim=1)
         total_aleatoric = aleatoric_unc.mean(dim=1)
         
@@ -571,7 +571,7 @@ class PredictionBasedExplorer:
         # Market volatility adjustment
         volatility_multiplier = 1.0
         if market_volatility is not None:
-            # More высокий bonus in volatile periods
+            # More high bonus in volatile periods
             volatility_multiplier = 1.0 + self.config.volatility_bonus_multiplier * market_volatility
             self.market_volatility_history.append(market_volatility)
         
@@ -582,7 +582,7 @@ class PredictionBasedExplorer:
         self.uncertainty_history.append(combined_uncertainty.item())
         self.information_gains.append(information_gain)
         
-        # Разбивка components
+        # components
         component_breakdown = {
             'epistemic_uncertainty': total_epistemic.item(),
             'aleatoric_uncertainty': total_aleatoric.item(),
@@ -601,7 +601,7 @@ class PredictionBasedExplorer:
                 'breakdown': component_breakdown
             }
             
-            # Ограничение размера cache
+            # Limitation size cache
             if len(self.prediction_cache) > 10000:
                 # Remove old entries
                 keys_to_remove = list(self.prediction_cache.keys())[:2000]
@@ -615,7 +615,7 @@ class PredictionBasedExplorer:
         epistemic_uncertainty: torch.Tensor,
         aleatoric_uncertainty: torch.Tensor
     ) -> float:
-        """Computation information gain from потенциального observation."""
+        """Computation information gain from observation."""
         # Information gain proportional to epistemic uncertainty
         # (reducible uncertainty through more data)
         epistemic_mean = epistemic_uncertainty.mean().item()
@@ -633,7 +633,7 @@ class PredictionBasedExplorer:
         multi_step_targets: Optional[Dict[int, torch.Tensor]] = None
     ) -> Dict[str, float]:
         """
-        Update prediction models with новыми experiences.
+        Update prediction models with new experiences.
         
         Args:
             states: Current states
@@ -644,7 +644,7 @@ class PredictionBasedExplorer:
         Returns:
             Training metrics
         """
-        # Основное update predictor
+        # update predictor
         metrics = self.predictor.update(states, actions, next_states)
         
         # Computation prediction errors for calibration
@@ -693,12 +693,12 @@ class PredictionBasedExplorer:
         current_state = states
         for step in range(1, self.config.max_prediction_steps + 1):
             if step in multi_step_targets:
-                # Prediction on step шагов вперед
+                # Prediction on step steps
                 predictions, _, _ = self.predictor.predict_with_uncertainty(
                     current_state, actions
                 )
                 
-                # Loss for данного step
+                # Loss for given step
                 target = multi_step_targets[step]
                 step_loss = F.mse_loss(predictions, target)
                 
@@ -710,7 +710,7 @@ class PredictionBasedExplorer:
                     if step in self.multi_step_errors:
                         self.multi_step_errors[step].append(error.item())
                 
-                # Следующий state for prediction
+                # state for prediction
                 current_state = predictions.detach()
         
         return multi_step_losses
@@ -747,7 +747,7 @@ class PredictionBasedExplorer:
         return 0.0
     
     def get_exploration_statistics(self) -> Dict[str, Any]:
-        """Get подробной statistics exploration."""
+        """Get detailed statistics exploration."""
         stats = {
             'uncertainty_statistics': {
                 'mean': np.mean(list(self.uncertainty_history)) if self.uncertainty_history else 0.0,
@@ -842,7 +842,7 @@ def create_prediction_based_system(config: PredictionBasedConfig) -> PredictionB
 
 
 if __name__ == "__main__":
-    # Пример use prediction-based exploration
+    # Example use prediction-based exploration
     config = PredictionBasedConfig(
         state_dim=128,
         action_dim=5,
@@ -853,7 +853,7 @@ if __name__ == "__main__":
     
     explorer = create_prediction_based_system(config)
     
-    # Симуляция exploration
+    # Simulation exploration
     batch_size = 32
     states = torch.randn(batch_size, config.state_dim)
     actions = torch.randn(batch_size, config.action_dim)
@@ -878,7 +878,7 @@ if __name__ == "__main__":
     print(f"\nExploration bonus: {bonus:.4f}")
     print("Breakdown:", breakdown)
     
-    # Статистика
+    # Statistics
     stats = explorer.get_exploration_statistics()
     print("\nExploration Statistics:")
     for key, value in stats.items():
