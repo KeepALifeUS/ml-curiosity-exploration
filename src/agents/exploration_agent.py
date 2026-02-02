@@ -1,7 +1,7 @@
 """
 Exploration Agent для systematic exploration crypto trading environments.
 
-Реализует specialized agent для pure exploration с Context7 enterprise patterns
+Реализует specialized agent для pure exploration с enterprise patterns
 для comprehensive strategy space exploration.
 
 Production-ready with:
@@ -48,7 +48,7 @@ class ExplorationAgentConfig:
     epsilon_decay: float = 0.995
     min_epsilon: float = 0.1
     
-    # Context7 enterprise settings
+    #  enterprise settings
     distributed_exploration: bool = True
     real_time_adaptation: bool = True
     
@@ -67,7 +67,7 @@ class ExplorationAgent:
     """
     Specialized agent для systematic exploration.
     
-    Применяет Context7 паттерн "Exploration Strategy" для
+    Применяет design pattern "Exploration Strategy" для
     comprehensive coverage торгового пространства стратегий.
     """
     

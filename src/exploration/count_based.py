@@ -2,7 +2,7 @@
 Count-Based Exploration для crypto trading environments.
 
 Реализует exploration strategies основанные на state visitation counts
-с Context7 enterprise patterns для scalable exploration tracking.
+с enterprise patterns для scalable exploration tracking.
 """
 
 import numpy as np
@@ -52,7 +52,7 @@ class CountBasedConfig:
     hash_function: str = "md5"  # "md5", "sha256", "xxhash"
     max_states_memory: int = 1000000
     
-    # Context7 enterprise settings
+    #  enterprise settings
     distributed_counting: bool = True
     persistent_storage: bool = True
     compression_enabled: bool = True
@@ -62,7 +62,7 @@ class StateDiscretizer(ABC):
     """
     Абстрактный базовый класс для state discretization.
     
-    Применяет Context7 паттерн "Strategy Pattern" для
+    Применяет design pattern "Strategy Pattern" для
     flexible state representation strategies.
     """
     
@@ -81,7 +81,7 @@ class AdaptiveGridDiscretizer(StateDiscretizer):
     """
     Adaptive grid discretization для continuous states.
     
-    Использует Context7 паттерн "Adaptive Systems" для
+    Использует design pattern "Adaptive Systems" для
     dynamic adjustment discretization parameters.
     """
     
@@ -168,7 +168,7 @@ class HashBasedDiscretizer(StateDiscretizer):
     """
     Hash-based state discretization для high-dimensional states.
     
-    Реализует Context7 паттерн "Dimensionality Reduction" через
+    Реализует design pattern "Dimensionality Reduction" через
     locality-sensitive hashing.
     """
     
@@ -246,7 +246,7 @@ class CryptoStateDiscretizer(StateDiscretizer):
     """
     Специализированный discretizer для crypto trading states.
     
-    Применяет Context7 паттерн "Domain-Specific Processing" для
+    Применяет design pattern "Domain-Specific Processing" для
     optimal representation финансовых данных.
     """
     
@@ -337,7 +337,7 @@ class CountBasedExplorer:
     """
     Count-based exploration system с advanced state tracking.
     
-    Использует Context7 паттерн "Exploration Strategy" для
+    Использует design pattern "Exploration Strategy" для
     intelligent exploration в crypto trading environments.
     """
     
@@ -579,7 +579,7 @@ class CountBasedEnvironment:
     """
     Environment wrapper с count-based exploration bonuses.
     
-    Интегрирует Context7 паттерн "Environment Augmentation" для
+    Интегрирует design pattern "Environment Augmentation" для
     enhanced exploration в crypto trading.
     """
     

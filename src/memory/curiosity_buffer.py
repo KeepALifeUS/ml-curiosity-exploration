@@ -1,7 +1,7 @@
 """
 Curiosity Buffer для prioritized replay curiosity-driven experiences.
 
-Реализует advanced replay buffer с Context7 enterprise patterns
+Реализует advanced replay buffer с enterprise patterns
 для efficient storage и sampling curiosity experiences.
 """
 
@@ -26,7 +26,7 @@ class CuriosityBufferConfig:
     alpha: float = 0.6  # Prioritization strength
     beta: float = 0.4  # Importance sampling correction
     
-    # Context7 settings
+    #  settings
     distributed_sampling: bool = True
     compression_enabled: bool = True
 
@@ -35,7 +35,7 @@ class CuriosityReplayBuffer:
     """
     Prioritized replay buffer для curiosity experiences.
     
-    Использует Context7 паттерн "Priority Queue" для
+    Использует design pattern "Priority Queue" для
     intelligent sampling exploration experiences.
     """
     

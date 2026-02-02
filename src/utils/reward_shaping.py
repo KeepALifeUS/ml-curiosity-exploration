@@ -1,7 +1,7 @@
 """
 Reward Shaping utilities для curiosity-driven exploration.
 
-Реализует advanced reward shaping techniques с Context7 enterprise patterns
+Реализует advanced reward shaping techniques с enterprise patterns
 для optimal learning signal formation в crypto trading.
 """
 
@@ -38,7 +38,7 @@ class CryptoRewardShaper:
     """
     Advanced reward shaping для crypto trading with curiosity.
     
-    Применяет Context7 паттерн "Reward Engineering" для
+    Применяет design pattern "Reward Engineering" для
     optimal learning signal formation.
     """
     

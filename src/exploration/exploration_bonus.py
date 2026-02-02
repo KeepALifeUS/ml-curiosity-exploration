@@ -2,7 +2,7 @@
 Exploration Bonus System для координации различных exploration strategies.
 
 Реализует unified framework для комбинирования multiple exploration signals
-с Context7 enterprise patterns для intelligent bonus allocation.
+с enterprise patterns для intelligent bonus allocation.
 """
 
 import torch
@@ -78,7 +78,7 @@ class ExplorationBonusConfig:
     parallel_computation: bool = True
     precision_mode: str = "float32"  # "float16", "float32", "float64"
     
-    # Context7 enterprise settings
+    #  enterprise settings
     distributed_bonus_computation: bool = True
     real_time_adaptation: bool = True
     bonus_history_storage: bool = True
@@ -89,7 +89,7 @@ class ExplorationBonusCalculator(ABC):
     """
     Абстрактный базовый класс для exploration bonus calculation.
     
-    Применяет Context7 паттерн "Strategy Pattern" для
+    Применяет design pattern "Strategy Pattern" для
     flexible bonus computation methods.
     """
     
@@ -254,7 +254,7 @@ class ExplorationBonusManager:
     """
     Manager для координации multiple exploration bonus calculators.
     
-    Использует Context7 паттерн "Composite Strategy" для
+    Использует design pattern "Composite Strategy" для
     intelligent combination exploration signals.
     """
     
@@ -720,7 +720,7 @@ class ExplorationBonusEnvironment:
     """
     Environment wrapper с unified exploration bonus system.
     
-    Интегрирует Context7 паттерн "Environment Enhancement" для
+    Интегрирует design pattern "Environment Enhancement" для
     comprehensive exploration в crypto trading.
     """
     

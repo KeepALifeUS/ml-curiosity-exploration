@@ -2,7 +2,7 @@
 Random Network Distillation (RND) для exploration через непредсказуемость.
 
 Реализует advanced exploration mechanism через prediction error от случайной сети
-с Context7 enterprise patterns для scalable curiosity systems.
+с enterprise patterns для scalable curiosity systems.
 """
 
 import torch
@@ -48,7 +48,7 @@ class RNDConfig:
     portfolio_diversity_weight: float = 0.4
     risk_novelty_weight: float = 0.3
     
-    # Context7 enterprise settings
+    #  enterprise settings
     distributed_mode: bool = True
     checkpoint_interval: int = 2000
     metrics_tracking: bool = True
@@ -62,7 +62,7 @@ class RunningMeanStd:
     """
     Running mean and standard deviation calculator для нормализации.
     
-    Использует Context7 паттерн "Streaming Statistics" для
+    Использует design pattern "Streaming Statistics" для
     эффективной обработки continuous data streams.
     """
     
@@ -102,7 +102,7 @@ class RandomNetwork(nn.Module):
     """
     Random target network для RND.
     
-    Применяет Context7 паттерн "Fixed Random Features" для
+    Применяет design pattern "Fixed Random Features" для
     создания stable exploration targets.
     """
     
@@ -142,7 +142,7 @@ class PredictorNetwork(nn.Module):
     """
     Predictor network для обучения предсказанию random network output.
     
-    Использует Context7 паттерн "Adaptive Learning" для
+    Использует design pattern "Adaptive Learning" для
     эффективного обучения representation.
     """
     
@@ -225,7 +225,7 @@ class CryptoStateProcessor:
     """
     Обработчик состояний специфичных для crypto trading.
     
-    Реализует Context7 паттерн "Domain-Specific Processing" для
+    Реализует design pattern "Domain-Specific Processing" для
     оптимальной обработки финансовых данных.
     """
     
@@ -288,7 +288,7 @@ class RNDTrainer:
     """
     Trainer для Random Network Distillation с advanced optimization.
     
-    Применяет Context7 паттерн "Distributed Training" для
+    Применяет design pattern "Distributed Training" для
     scalable learning на больших объемах trading data.
     """
     
@@ -537,7 +537,7 @@ class CryptoRNDEnvironment:
     """
     Crypto trading environment с RND-based exploration.
     
-    Интегрирует Context7 паттерн "Environment Augmentation" для
+    Интегрирует design pattern "Environment Augmentation" для
     enhanced exploration в финансовых рынках.
     """
     

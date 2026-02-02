@@ -1,7 +1,7 @@
 """
 State Encoder utilities для curiosity-driven exploration.
 
-Реализует advanced state encoding methods с Context7 enterprise patterns
+Реализует advanced state encoding methods с enterprise patterns
 для efficient state representation в crypto trading environments.
 """
 
@@ -38,7 +38,7 @@ class CryptoStateEncoder(nn.Module):
     """
     Advanced state encoder для crypto trading states.
     
-    Применяет Context7 паттерн "Feature Engineering" для
+    Применяет design pattern "Feature Engineering" для
     optimal state representation.
     """
     

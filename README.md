@@ -1,6 +1,6 @@
 # ML Curiosity Exploration System
 
-Enterprise-grade curiosity-driven exploration system for autonomous cryptocurrency trading strategy discovery, built with Context7 enterprise patterns for production deployment.
+Enterprise-grade curiosity-driven exploration system for autonomous cryptocurrency trading strategy discovery, built with enterprise patterns for production deployment.
 
 ## 🚀 Features
 
@@ -68,7 +68,7 @@ ml-curiosity-exploration/
 
 ```
 
-## 🎯 Context7 Enterprise Patterns
+## 🎯 enterprise patterns
 
 ### Scalable Architecture
 
@@ -444,7 +444,7 @@ MIT License - see LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-- Context7 framework for enterprise patterns
+- enterprise framework for enterprise patterns
 - PyTorch team for deep learning framework
 - FAISS team for efficient similarity search
 - OpenAI for reinforcement learning research

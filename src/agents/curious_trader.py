@@ -45,7 +45,7 @@ class CuriousTraderConfig:
     profit_target: float = 0.02
     max_position_size: float = 1.0
     
-    # Context7 enterprise settings
+    #  enterprise settings
     distributed_training: bool = True
     real_time_execution: bool = True
 
@@ -54,7 +54,7 @@ class CuriousTrader:
     """
     Advanced trading agent с curiosity-driven exploration.
     
-    Применяет Context7 паттерн "Autonomous Agent" для
+    Применяет design pattern "Autonomous Agent" для
     intelligent trading strategy discovery.
     """
     

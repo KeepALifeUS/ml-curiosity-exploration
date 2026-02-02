@@ -2,7 +2,7 @@
 Never Give Up (NGU) Agent для persistent exploration в crypto trading.
 
 Реализует state-of-the-art exploration through episodic memory и RND
-с Context7 enterprise patterns для scalable long-term exploration.
+с enterprise patterns для scalable long-term exploration.
 """
 
 import torch
@@ -52,7 +52,7 @@ class NGUConfig:
     risk_state_memory: bool = True
     temporal_context_length: int = 20
     
-    # Context7 enterprise settings
+    #  enterprise settings
     distributed_memory: bool = True
     memory_compression: bool = True
     faiss_gpu: bool = True
@@ -69,7 +69,7 @@ class EpisodicMemory:
     """
     Episodic memory для NGU с efficient similarity search.
     
-    Использует Context7 паттерн "Memory Management" для
+    Использует design pattern "Memory Management" для
     scalable storage и retrieval crypto trading experiences.
     """
     
@@ -336,7 +336,7 @@ class StateEmbedder(nn.Module):
     """
     State embedder для создания compact representations.
     
-    Применяет Context7 паттерн "Representation Learning" для
+    Применяет design pattern "Representation Learning" для
     efficient state encoding в crypto trading environments.
     """
     
@@ -444,7 +444,7 @@ class NGUTrainer:
     """
     Trainer для Never Give Up agent с RND и episodic memory.
     
-    Реализует Context7 паттерн "Multi-Component Learning" для
+    Реализует design pattern "Multi-Component Learning" для
     coordinated training всех компонентов NGU.
     """
     

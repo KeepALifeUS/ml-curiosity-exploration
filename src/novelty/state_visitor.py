@@ -1,7 +1,7 @@
 """
 State Visitor System для отслеживания exploration coverage.
 
-Реализует sophisticated tracking визитов states с Context7 enterprise patterns
+Реализует sophisticated tracking визитов states с enterprise patterns
 для comprehensive analysis exploration efficiency в crypto trading.
 """
 
@@ -64,7 +64,7 @@ class StateVisitorConfig:
     plot_transition_graphs: bool = True
     save_visualizations: bool = True
     
-    # Context7 enterprise settings
+    #  enterprise settings
     distributed_tracking: bool = True
     real_time_analysis: bool = True
     persistent_storage: bool = True
@@ -75,7 +75,7 @@ class StateRepresentation(ABC):
     """
     Абстрактный базовый класс для state representation methods.
     
-    Применяет Context7 паттерн "Strategy Pattern" для
+    Применяет design pattern "Strategy Pattern" для
     flexible state encoding strategies.
     """
     
@@ -99,7 +99,7 @@ class HashStateRepresentation(StateRepresentation):
     """
     Hash-based state representation.
     
-    Использует Context7 паттерн "Content Hashing" для
+    Использует design pattern "Content Hashing" для
     efficient state identification.
     """
     
@@ -178,7 +178,7 @@ class GridStateRepresentation(StateRepresentation):
     """
     Grid-based state representation для continuous spaces.
     
-    Применяет Context7 паттерн "Spatial Discretization" для
+    Применяет design pattern "Spatial Discretization" для
     structured state space representation.
     """
     
@@ -248,7 +248,7 @@ class StateVisitor:
     """
     Comprehensive state visitation tracking system.
     
-    Использует Context7 паттерн "Behavioral Analytics" для
+    Использует design pattern "Behavioral Analytics" для
     detailed analysis exploration patterns в crypto trading.
     """
     

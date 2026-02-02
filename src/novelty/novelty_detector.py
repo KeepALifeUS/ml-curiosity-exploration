@@ -2,7 +2,7 @@
 Novelty Detection System для crypto trading environments.
 
 Реализует advanced методы для обнаружения novel states и patterns
-с Context7 enterprise patterns для real-time anomaly detection.
+с enterprise patterns для real-time anomaly detection.
 """
 
 import torch
@@ -65,7 +65,7 @@ class NoveltyDetectionConfig:
     parallel_detection: bool = True
     caching_enabled: bool = True
     
-    # Context7 enterprise settings
+    #  enterprise settings
     real_time_detection: bool = True
     distributed_processing: bool = True
     anomaly_storage: bool = True
@@ -76,7 +76,7 @@ class NoveltyDetector(ABC):
     """
     Абстрактный базовый класс для novelty detection methods.
     
-    Применяет Context7 паттерн "Strategy Pattern" для
+    Применяет design pattern "Strategy Pattern" для
     flexible novelty detection approaches.
     """
     
@@ -110,7 +110,7 @@ class AutoencoderNoveltyDetector(NoveltyDetector):
     """
     Autoencoder-based novelty detection.
     
-    Использует Context7 паттерн "Representation Learning" для
+    Использует design pattern "Representation Learning" для
     detection через reconstruction error.
     """
     
@@ -320,7 +320,7 @@ class IsolationForestDetector(NoveltyDetector):
     """
     Isolation Forest-based novelty detection.
     
-    Применяет Context7 паттерн "Ensemble Learning" для
+    Применяет design pattern "Ensemble Learning" для
     robust anomaly detection.
     """
     
@@ -543,7 +543,7 @@ class CryptoNoveltyDetector:
     """
     Comprehensive novelty detection system для crypto trading.
     
-    Использует Context7 паттерн "Ensemble Strategy" для
+    Использует design pattern "Ensemble Strategy" для
     robust novelty detection с multiple methods.
     """
     

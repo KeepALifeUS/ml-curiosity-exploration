@@ -2,7 +2,7 @@
 ML Curiosity Exploration System
 
 Enterprise-grade curiosity-driven exploration для autonomous cryptocurrency trading
-strategy discovery, built with Context7 enterprise patterns.
+strategy discovery, built with enterprise patterns.
 
 🚀 Core Features:
 - Intrinsic Curiosity Module (ICM) для controllable exploration
@@ -19,7 +19,7 @@ strategy discovery, built with Context7 enterprise patterns.
 - agents: Curious trading and exploration agents
 - utils: State encoding and reward shaping utilities
 
-🏗️ Context7 Enterprise Patterns:
+🏗️ enterprise patterns:
 - Distributed training and inference
 - Real-time processing capabilities
 - Scalable memory management

@@ -2,7 +2,7 @@
 Intrinsic Curiosity Module (ICM) для автономного исследования торговых стратегий.
 
 Реализует curiosity-driven exploration через forward/inverse dynamics модели
-с Context7 enterprise patterns для масштабируемой системы исследования.
+с enterprise patterns для масштабируемой системы исследования.
 """
 
 import torch
@@ -42,7 +42,7 @@ class ICMConfig:
     portfolio_features: int = 20  # Состояние портфеля
     risk_features: int = 10  # Риск-метрики
     
-    # Context7 cloud-native settings
+    #  cloud-native settings
     distributed_training: bool = True
     checkpoint_interval: int = 1000
     metrics_enabled: bool = True
@@ -52,7 +52,7 @@ class FeatureEncoder(nn.Module):
     """
     Кодировщик состояний для ICM с поддержкой crypto-trading данных.
     
-    Применяет Context7 паттерн "Feature Representation Learning"
+    Применяет design pattern "Feature Representation Learning"
     для эффективного представления состояний рынка.
     """
     
@@ -127,7 +127,7 @@ class ForwardModel(nn.Module):
     """
     Forward Dynamics Model для предсказания следующего состояния.
     
-    Использует Context7 паттерн "Predictive Modeling" для точного
+    Использует design pattern "Predictive Modeling" для точного
     прогнозирования динамики рынка.
     """
     
@@ -191,7 +191,7 @@ class InverseModel(nn.Module):
     """
     Inverse Dynamics Model для предсказания действия между состояниями.
     
-    Применяет Context7 паттерн "Action Understanding" для изучения
+    Применяет design pattern "Action Understanding" для изучения
     контролируемых аспектов окружения.
     """
     
@@ -245,7 +245,7 @@ class CuriosityRewardCalculator:
     """
     Вычислитель intrinsic reward на основе prediction error.
     
-    Использует Context7 паттерн "Reward Engineering" для формирования
+    Использует design pattern "Reward Engineering" для формирования
     эффективных сигналов любопытства.
     """
     
@@ -309,7 +309,7 @@ class ICMTrainer:
     """
     Тренер для Intrinsic Curiosity Module с advanced optimization.
     
-    Реализует Context7 паттерн "Distributed Learning" для
+    Реализует design pattern "Distributed Learning" для
     эффективного обучения на больших объемах данных.
     """
     
@@ -481,7 +481,7 @@ class CryptoICMEnvironment:
     """
     Специализированная обертка для интеграции ICM с crypto trading environment.
     
-    Применяет Context7 паттерн "Environment Adaptation" для
+    Применяет design pattern "Environment Adaptation" для
     seamless интеграции с торговыми системами.
     """
     

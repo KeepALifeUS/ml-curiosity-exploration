@@ -2,7 +2,7 @@
 Prediction-Based Exploration для crypto trading environments.
 
 Реализует exploration strategies основанные на prediction uncertainty
-с Context7 enterprise patterns для intelligent strategy discovery.
+с enterprise patterns для intelligent strategy discovery.
 """
 
 import torch
@@ -63,7 +63,7 @@ class PredictionBasedConfig:
     prediction_diversity_bonus: bool = True
     confidence_calibration: bool = True
     
-    # Context7 enterprise settings
+    #  enterprise settings
     distributed_ensemble: bool = True
     model_compression: bool = True
     uncertainty_caching: bool = True
@@ -74,7 +74,7 @@ class UncertaintyEstimator(ABC):
     """
     Абстрактный базовый класс для uncertainty estimation.
     
-    Применяет Context7 паттерн "Strategy Pattern" для
+    Применяет design pattern "Strategy Pattern" для
     flexible uncertainty quantification methods.
     """
     
@@ -107,7 +107,7 @@ class EnsemblePredictor(nn.Module):
     """
     Ensemble-based uncertainty estimation.
     
-    Использует Context7 паттерн "Ensemble Methods" для
+    Использует design pattern "Ensemble Methods" для
     robust uncertainty quantification в financial predictions.
     """
     
@@ -453,7 +453,7 @@ class PredictionBasedExplorer:
     """
     Prediction-based exploration system с uncertainty quantification.
     
-    Использует Context7 паттерн "Uncertainty-Aware Exploration" для
+    Использует design pattern "Uncertainty-Aware Exploration" для
     intelligent discovery торговых strategies.
     """
     

@@ -1,7 +1,7 @@
 """
 Comprehensive tests для curiosity-driven exploration system.
 
-Реализует thorough testing всех компонентов с Context7 enterprise patterns
+Реализует thorough testing всех компонентов с enterprise patterns
 для reliable и robust system validation.
 """
 

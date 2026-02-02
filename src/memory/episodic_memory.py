@@ -2,7 +2,7 @@
 Episodic Memory System для curiosity-driven exploration.
 
 Реализует sophisticated memory system для хранения и retrieval exploration experiences
-с Context7 enterprise patterns для scalable memory management.
+с enterprise patterns для scalable memory management.
 """
 
 import numpy as np
@@ -35,7 +35,7 @@ class EpisodicMemoryConfig:
     replacement_strategy: str = "fifo"  # "fifo", "lru", "importance"
     compression_enabled: bool = True
     
-    # Context7 enterprise settings
+    #  enterprise settings
     distributed_memory: bool = True
     persistent_storage: bool = True
     real_time_retrieval: bool = True
@@ -45,7 +45,7 @@ class EpisodicMemorySystem:
     """
     Enterprise-grade episodic memory для curiosity exploration.
     
-    Применяет Context7 паттерн "Memory Architecture" для
+    Применяет design pattern "Memory Architecture" для
     efficient storage и retrieval exploration experiences.
     """
     
