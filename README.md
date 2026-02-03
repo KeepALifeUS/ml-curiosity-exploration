@@ -448,3 +448,7 @@ MIT License - see LICENSE file for details.
 - PyTorch team for deep learning framework
 - FAISS team for efficient similarity search
 - OpenAI for reinforcement learning research
+
+## Support
+
+For questions and support, please open an issue on GitHub.
